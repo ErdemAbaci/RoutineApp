@@ -1,0 +1,9 @@
+.env
+node_modules/
+.build/
+.serverless/
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars

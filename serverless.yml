@@ -1,0 +1,41 @@
+service: routine-app-backend
+
+custom:
+  routinesTableName: routine-app-dev-routines
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1
+  stage: dev
+
+  environment:
+    ROUTINES_TABLE_NAME: ${self:custom.routinesTableName}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:UpdateItem
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}/index/*
+
+functions:
+  createRoutine:
+    handler: src/handlers/createRoutine.handler
+    events:
+      - httpApi:
+          path: /routines
+          method: post
+
+  listRoutines:
+    handler: src/handlers/listRoutines.handler
+    events:
+      - httpApi:
+          path: /routines
+          method: get
