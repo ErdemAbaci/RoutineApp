@@ -1,3 +1,5 @@
+import { routineRepository } from "../repositories/routineRepository";
+
 type ApiResponse = {
   statusCode: number;
   headers: Record<string, string>;
@@ -15,8 +17,13 @@ function json(statusCode: number, body: unknown): ApiResponse {
 }
 
 export async function handler(): Promise<ApiResponse> {
-  return json(200, {
-    message: "listRoutines handler is ready",
-    items: [],
-  });
+  try {
+    const items = await routineRepository.listByOwner("temporary-user-id");
+
+    return json(200, { items });
+  } catch (error) {
+    console.error("Failed to list routines", error);
+
+    return json(500, { message: "Could not load routines" });
+  }
 }

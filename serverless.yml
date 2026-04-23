@@ -39,3 +39,24 @@ functions:
       - httpApi:
           path: /routines
           method: get
+  
+  getRoutine:
+    handler: src/handlers/getRoutine.handler
+    events:
+      - httpApi:
+          path: /routines/{id}
+          method: get
+
+  updateRoutine:
+    handler: src/handlers/updateRoutine.handler
+    events:
+      - httpApi:
+          path: /routines/{id}
+          method: put
+
+  archiveRoutine:
+    handler: src/handlers/archiveRoutine.handler
+    events:
+      - httpApi:
+          path: /routines/{id}/archive
+          method: post        
