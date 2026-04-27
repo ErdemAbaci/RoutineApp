@@ -2,6 +2,7 @@ service: routine-app-backend
 
 custom:
   routinesTableName: routine-app-dev-routines
+  completionsTableName: routine-app-dev-routine-completions
 
 provider:
   name: aws
@@ -11,6 +12,7 @@ provider:
 
   environment:
     ROUTINES_TABLE_NAME: ${self:custom.routinesTableName}
+    COMPLETIONS_TABLE_NAME: ${self:custom.completionsTableName}
 
   iam:
     role:
@@ -24,6 +26,8 @@ provider:
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.completionsTableName}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.completionsTableName}/index/*
 
 functions:
   createRoutine:
@@ -59,4 +63,25 @@ functions:
     events:
       - httpApi:
           path: /routines/{id}/archive
+          method: post      
+
+  getToday:
+    handler: src/handlers/getToday.handler
+    events:
+      - httpApi:
+          path: /today
+          method: get          
+
+  completeRoutine:
+    handler: src/handlers/completeRoutine.handler
+    events:
+      - httpApi:
+          path: /routines/{id}/complete
           method: post        
+
+  skipRoutine:
+    handler: src/handlers/skipRoutine.handler
+    events:
+      - httpApi:
+          path: /routines/{id}/skip
+          method: post      
