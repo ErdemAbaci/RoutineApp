@@ -3,7 +3,7 @@ service: routine-app-backend
 custom:
   routinesTableName: routine-app-dev-routines
   completionsTableName: routine-app-dev-routine-completions
-
+  dailySummariesTableName: routine-app-dev-daily-summaries
 provider:
   name: aws
   runtime: nodejs18.x
@@ -13,7 +13,7 @@ provider:
   environment:
     ROUTINES_TABLE_NAME: ${self:custom.routinesTableName}
     COMPLETIONS_TABLE_NAME: ${self:custom.completionsTableName}
-
+    DAILY_SUMMARIES_TABLE_NAME: ${self:custom.dailySummariesTableName}
   iam:
     role:
       statements:
@@ -28,7 +28,8 @@ provider:
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}/index/*
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.completionsTableName}
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.completionsTableName}/index/*
-
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dailySummariesTableName}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dailySummariesTableName}/index/*
 functions:
   createRoutine:
     handler: src/handlers/createRoutine.handler

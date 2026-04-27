@@ -1,4 +1,7 @@
 import type { Routine } from "../types/routine";
+import type { RoutineCompletion } from "../types/completion";
+
+export type TodayRoutineCompletionStatus = "pending" | "done" | "skipped";
 
 export type TodayRoutineResponse = {
   routineId: string;
@@ -7,12 +10,13 @@ export type TodayRoutineResponse = {
   scheduledTime: string;
   frequencyType: string;
   reminderEnabled: boolean;
-  completionStatus: "pending";
-  completedAt: null;
+  completionStatus: TodayRoutineCompletionStatus;
+  completedAt: string | null;
 };
 
 export function toTodayRoutineResponse(
   routine: Routine,
+  completion?: RoutineCompletion,
 ): TodayRoutineResponse {
   return {
     routineId: routine.id,
@@ -21,7 +25,9 @@ export function toTodayRoutineResponse(
     scheduledTime: routine.scheduledTime,
     frequencyType: routine.frequencyType,
     reminderEnabled: routine.reminderEnabled,
-    completionStatus: "pending",
-    completedAt: null,
+    completionStatus: completion?.status === "done" || completion?.status === "skipped"
+      ? completion.status
+      : "pending",
+    completedAt: completion?.completedAt ?? null,
   };
 }

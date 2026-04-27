@@ -1,6 +1,8 @@
 import { routineRepository } from "../repositories/routineRepository";
+import { completionRepository } from "../repositories/completionRepository";
 import { getRoutinesActiveOnDate } from "../services/schedule/scheduleService";
 import { toTodayRoutineResponse } from "../mappers/todayResponseMapper";
+import { calculateAndSaveDailySummary } from "../services/summaries/summaryService";
 import { formatDateKey } from "../utils/date";
 
 type ApiResponse = {
@@ -20,29 +22,49 @@ function json(statusCode: number, body: unknown): ApiResponse {
 }
 
 export async function handler(): Promise<ApiResponse> {
+  const ownerId = "temporary-user-id";
   const today = new Date();
   const date = formatDateKey(today);
 
   try {
-    const routines = await routineRepository.listByOwner("temporary-user-id");
+    const routines = await routineRepository.listByOwner(ownerId);
     const activeTodayRoutines = getRoutinesActiveOnDate(routines, today);
 
-    const items = activeTodayRoutines.map((routine) =>
-      toTodayRoutineResponse(routine),
+    const completions = await completionRepository.listByOwnerAndDate(
+      ownerId,
+      date,
     );
+
+    const completionsByRoutineId = new Map(
+      completions.map((completion) => [completion.routineId, completion]),
+    );
+
+    const items = activeTodayRoutines.map((routine) =>
+      toTodayRoutineResponse(
+        routine,
+        completionsByRoutineId.get(routine.id),
+      ),
+    );
+
+    const summary = await calculateAndSaveDailySummary({
+      ownerId,
+      date,
+      activeRoutines: activeTodayRoutines,
+      completions,
+    });
 
     return json(200, {
       date,
       items,
       summary: {
-        totalRoutines: items.length,
-        completedCount: 0,
-        skippedCount: 0,
-        missedCount: 0,
-        completionRate: 0,
-        badge: "missed",
-        streakAfterThisDay: 0,
-        finalized: false,
+        totalRoutines: summary.totalRoutines,
+        completedCount: summary.completedCount,
+        skippedCount: summary.skippedCount,
+        missedCount: summary.missedCount,
+        completionRate: summary.completionRate,
+        badge: summary.badge,
+        streakAfterThisDay: summary.streakAfterThisDay,
+        finalized: summary.finalized,
       },
     });
   } catch (error) {

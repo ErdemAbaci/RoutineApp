@@ -80,3 +80,37 @@ resource "aws_dynamodb_table" "routine_completions" {
     ManagedBy   = "terraform"
   }
 }
+
+resource "aws_dynamodb_table" "daily_summaries" {
+  name         = "routine-app-dev-daily-summaries"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "ownerId"
+    type = "S"
+  }
+
+  attribute {
+    name = "date"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "ownerId-date-index"
+    hash_key        = "ownerId"
+    range_key       = "date"
+    projection_type = "ALL"
+  }
+
+  tags = {
+    Project     = "routine-app"
+    Environment = "dev"
+    ManagedBy   = "terraform"
+  }
+}
