@@ -4,6 +4,7 @@ custom:
   routinesTableName: routine-app-dev-routines
   completionsTableName: routine-app-dev-routine-completions
   dailySummariesTableName: routine-app-dev-daily-summaries
+  gamificationStateTableName: routine-app-dev-gamification-state
 provider:
   name: aws
   runtime: nodejs18.x
@@ -14,6 +15,7 @@ provider:
     ROUTINES_TABLE_NAME: ${self:custom.routinesTableName}
     COMPLETIONS_TABLE_NAME: ${self:custom.completionsTableName}
     DAILY_SUMMARIES_TABLE_NAME: ${self:custom.dailySummariesTableName}
+    GAMIFICATION_STATE_TABLE_NAME: ${self:custom.gamificationStateTableName}
   iam:
     role:
       statements:
@@ -30,6 +32,8 @@ provider:
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.completionsTableName}/index/*
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dailySummariesTableName}
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dailySummariesTableName}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.gamificationStateTableName}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.gamificationStateTableName}/index/*
 functions:
   createRoutine:
     handler: src/handlers/createRoutine.handler
@@ -106,6 +110,13 @@ functions:
     events:
       - httpApi:
           path: /streak
+          method: get
+
+  getInsights:
+    handler: src/handlers/getInsights.handler
+    events:
+      - httpApi:
+          path: /insights
           method: get
 
   finalizeSummaryByDate:

@@ -1,3 +1,4 @@
+import { gamificationStateRepository } from "../repositories/gamificationStateRepository";
 import { summaryRepository } from "../repositories/summaryRepository";
 import { toStreakResponse } from "../mappers/streakResponseMapper";
 
@@ -21,9 +22,12 @@ export async function handler(): Promise<ApiResponse> {
   const ownerId = "temporary-user-id";
 
   try {
-    const latestSummary = await summaryRepository.getLatestByOwner(ownerId);
+    const [latestSummary, gamificationState] = await Promise.all([
+      summaryRepository.getLatestByOwner(ownerId),
+      gamificationStateRepository.getByOwner(ownerId),
+    ]);
 
-    return json(200, toStreakResponse(latestSummary));
+    return json(200, toStreakResponse(latestSummary, gamificationState));
   } catch (error) {
     console.error("Failed to load streak", error);
 

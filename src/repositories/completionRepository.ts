@@ -50,4 +50,29 @@ export const completionRepository = {
 
     return (response.Items as RoutineCompletion[] | undefined) ?? [];
   },
+
+  async listByOwnerBetweenDates(
+    ownerId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<RoutineCompletion[]> {
+    const response = await dynamoDb.send(
+      new QueryCommand({
+        TableName: getTableName(),
+        IndexName: "ownerId-date-index",
+        KeyConditionExpression:
+          "ownerId = :ownerId AND #date BETWEEN :startDate AND :endDate",
+        ExpressionAttributeNames: {
+          "#date": "date",
+        },
+        ExpressionAttributeValues: {
+          ":ownerId": ownerId,
+          ":startDate": startDate,
+          ":endDate": endDate,
+        },
+      }),
+    );
+
+    return (response.Items as RoutineCompletion[] | undefined) ?? [];
+  },
 };

@@ -1,5 +1,6 @@
 import { routineRepository } from "../repositories/routineRepository";
 import { completionRepository } from "../repositories/completionRepository";
+import { gamificationStateRepository } from "../repositories/gamificationStateRepository";
 import { getRoutinesActiveOnDate } from "../services/schedule/scheduleService";
 import { toTodayRoutineResponse } from "../mappers/todayResponseMapper";
 import { calculateAndSaveDailySummary } from "../services/summaries/summaryService";
@@ -52,6 +53,15 @@ export async function handler(): Promise<ApiResponse> {
       activeRoutines: activeTodayRoutines,
       completions,
     });
+    const gamificationState = await gamificationStateRepository.getByOwner(
+      ownerId,
+    );
+    const freezeBalance = gamificationState?.freezeBalance ?? 0;
+    const streakAtRisk =
+      !summary.finalized &&
+      summary.totalPoints > 0 &&
+      summary.earnedPoints === 0 &&
+      freezeBalance === 0;
 
     return json(200, {
       date,
@@ -68,8 +78,22 @@ export async function handler(): Promise<ApiResponse> {
         pointCompletionRate: summary.pointCompletionRate,
         completionRate: summary.completionRate,
         badge: summary.badge,
+        streakBeforeThisDay: summary.streakBeforeThisDay,
         streakAfterThisDay: summary.streakAfterThisDay,
+        freezeUsed: summary.freezeUsed,
+        freezeEarned: summary.freezeEarned,
+        freezeBalanceAfterThisDay: summary.freezeBalanceAfterThisDay,
+        streakProtected: summary.streakProtected,
         finalized: summary.finalized,
+      },
+      gamification: {
+        currentStreak:
+          gamificationState?.currentStreak ?? summary.streakBeforeThisDay,
+        freezeBalance,
+        streakAtRisk,
+        motivationMessage: streakAtRisk
+          ? "Streak'in riskte. Bugün en az bir rutin tamamla ve haftalık freeze hedefini yeniden yakala."
+          : null,
       },
     });
   } catch (error) {

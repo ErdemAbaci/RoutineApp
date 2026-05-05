@@ -15,7 +15,12 @@ export type DailySummary = {
   pointCompletionRate: number;
   completionRate: number;
   badge: DailyBadge;
+  streakBeforeThisDay: number;
   streakAfterThisDay: number;
+  freezeUsed: boolean;
+  freezeEarned: boolean;
+  freezeBalanceAfterThisDay: number;
+  streakProtected: boolean;
   finalized: boolean;
   createdAt: string;
   updatedAt: string;

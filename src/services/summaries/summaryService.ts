@@ -1,9 +1,14 @@
 import { completionRepository } from "../../repositories/completionRepository";
+import { gamificationStateRepository } from "../../repositories/gamificationStateRepository";
 import { routineRepository } from "../../repositories/routineRepository";
 import { summaryRepository } from "../../repositories/summaryRepository";
 import { getRoutinePoints } from "../routines/routineScoring";
 import { getRoutinesActiveOnDate } from "../schedule/scheduleService";
 import { calculateBadge } from "./badgeService";
+import {
+  createInitialGamificationState,
+  resolveFinalizedGamification,
+} from "./gamificationService";
 import { calculateNextStreak } from "./streakService";
 import type { Routine } from "../../types/routine";
 import type { RoutineCompletion } from "../../types/completion";
@@ -16,14 +21,36 @@ function getPreviousDateKey(date: string): string {
   return currentDate.toISOString().slice(0, 10);
 }
 
+function getDaysBetween(date: string, previousDate: string): number {
+  const dateTime = new Date(`${date}T00:00:00.000Z`).getTime();
+  const previousDateTime = new Date(`${previousDate}T00:00:00.000Z`).getTime();
+
+  return Math.round((dateTime - previousDateTime) / 86400000);
+}
+
 async function buildAndSaveDailySummary(params: {
   ownerId: string;
   date: string;
   activeRoutines: Routine[];
   completions: RoutineCompletion[];
   finalized?: boolean;
+  gamification?: {
+    streakBeforeThisDay: number;
+    streakAfterThisDay: number;
+    freezeUsed: boolean;
+    freezeEarned: boolean;
+    freezeBalanceAfterThisDay: number;
+    streakProtected: boolean;
+  };
 }): Promise<DailySummary> {
-  const { ownerId, date, activeRoutines, completions, finalized } = params;
+  const {
+    ownerId,
+    date,
+    activeRoutines,
+    completions,
+    finalized,
+    gamification,
+  } = params;
 
   const totalRoutines = activeRoutines.length;
   const activeRoutinesById = new Map(
@@ -97,7 +124,7 @@ async function buildAndSaveDailySummary(params: {
   );
 
   const previousStreak = previousSummary?.streakAfterThisDay ?? 0;
-  const streakAfterThisDay = calculateNextStreak(previousStreak, badge);
+  const projectedStreakAfterThisDay = calculateNextStreak(previousStreak, badge);
 
   const now = new Date().toISOString();
 
@@ -121,7 +148,26 @@ async function buildAndSaveDailySummary(params: {
     pointCompletionRate,
     completionRate,
     badge,
-    streakAfterThisDay,
+    streakBeforeThisDay:
+      gamification?.streakBeforeThisDay ??
+      existingSummary?.streakBeforeThisDay ??
+      previousStreak,
+    streakAfterThisDay:
+      gamification?.streakAfterThisDay ??
+      existingSummary?.streakAfterThisDay ??
+      projectedStreakAfterThisDay,
+    freezeUsed:
+      gamification?.freezeUsed ?? existingSummary?.freezeUsed ?? false,
+    freezeEarned:
+      gamification?.freezeEarned ?? existingSummary?.freezeEarned ?? false,
+    freezeBalanceAfterThisDay:
+      gamification?.freezeBalanceAfterThisDay ??
+      existingSummary?.freezeBalanceAfterThisDay ??
+      0,
+    streakProtected:
+      gamification?.streakProtected ??
+      existingSummary?.streakProtected ??
+      false,
     finalized: finalized ?? existingSummary?.finalized ?? false,
     createdAt: existingSummary?.createdAt ?? now,
     updatedAt: now,
@@ -197,6 +243,34 @@ export async function finalizeDailySummary(params: {
   );
 
   const allCompletions = [...existingCompletions, ...missedCompletions];
+  const summaryPreview = await buildAndSaveDailySummary({
+    ownerId,
+    date,
+    activeRoutines,
+    completions: allCompletions,
+    finalized: false,
+  });
+
+  const existingState = await gamificationStateRepository.getByOwner(ownerId);
+  const currentState =
+    existingState ?? createInitialGamificationState(ownerId, now);
+  const recentSummaries = (await summaryRepository.listByOwner(ownerId, 14))
+    .filter((summary) => summary.finalized)
+    .filter((summary) => summary.date !== date)
+    .filter((summary) => {
+      const daysBetween = getDaysBetween(date, summary.date);
+
+      return daysBetween >= 1 && daysBetween <= 6;
+    });
+  const gamification = resolveFinalizedGamification({
+    state: currentState,
+    badge: summaryPreview.badge,
+    date,
+    recentSummaries,
+    now,
+  });
+
+  await gamificationStateRepository.upsert(gamification.state);
 
   return buildAndSaveDailySummary({
     ownerId,
@@ -204,5 +278,6 @@ export async function finalizeDailySummary(params: {
     activeRoutines,
     completions: allCompletions,
     finalized: true,
+    gamification,
   });
 }

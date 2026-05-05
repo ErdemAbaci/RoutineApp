@@ -13,7 +13,12 @@ export type DailySummaryResponse = {
   pointCompletionRate: number;
   completionRate: number;
   badge: string;
+  streakBeforeThisDay: number;
   streakAfterThisDay: number;
+  freezeUsed: boolean;
+  freezeEarned: boolean;
+  freezeBalanceAfterThisDay: number;
+  streakProtected: boolean;
   finalized: boolean;
 };
 
@@ -33,7 +38,12 @@ export function toDailySummaryResponse(
     pointCompletionRate: summary.pointCompletionRate ?? 0,
     completionRate: summary.completionRate,
     badge: summary.badge,
+    streakBeforeThisDay: summary.streakBeforeThisDay ?? 0,
     streakAfterThisDay: summary.streakAfterThisDay,
+    freezeUsed: summary.freezeUsed ?? false,
+    freezeEarned: summary.freezeEarned ?? false,
+    freezeBalanceAfterThisDay: summary.freezeBalanceAfterThisDay ?? 0,
+    streakProtected: summary.streakProtected ?? false,
     finalized: summary.finalized,
   };
 }

@@ -114,3 +114,20 @@ resource "aws_dynamodb_table" "daily_summaries" {
     ManagedBy   = "terraform"
   }
 }
+
+resource "aws_dynamodb_table" "gamification_state" {
+  name         = "routine-app-dev-gamification-state"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "ownerId"
+
+  attribute {
+    name = "ownerId"
+    type = "S"
+  }
+
+  tags = {
+    Project     = "routine-app"
+    Environment = "dev"
+    ManagedBy   = "terraform"
+  }
+}
