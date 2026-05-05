@@ -8,6 +8,11 @@ export type DailySummary = {
   completedCount: number;
   skippedCount: number;
   missedCount: number;
+  totalPoints: number;
+  earnedPoints: number;
+  skippedPoints: number;
+  missedPoints: number;
+  pointCompletionRate: number;
   completionRate: number;
   badge: DailyBadge;
   streakAfterThisDay: number;

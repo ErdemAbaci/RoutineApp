@@ -86,3 +86,31 @@ functions:
       - httpApi:
           path: /routines/{id}/skip
           method: post      
+
+  listSummaries:
+    handler: src/handlers/listSummaries.handler
+    events:
+      - httpApi:
+          path: /summaries
+          method: get          
+
+  getSummaryByDate:
+    handler: src/handlers/getSummaryByDate.handler
+    events:
+      - httpApi:
+          path: /summaries/{date}
+          method: get
+
+  getStreak:
+    handler: src/handlers/getStreak.handler
+    events:
+      - httpApi:
+          path: /streak
+          method: get
+
+  finalizeSummaryByDate:
+    handler: src/handlers/finalizeSummaryByDate.handler
+    events:
+      - httpApi:
+          path: /summaries/{date}/finalize
+          method: post          

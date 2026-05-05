@@ -46,6 +46,9 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
     if (message === "Routine not found") {
       return json(404, { message });
     }
+    if (message === "This day has already been finalized") {
+      return json(409, { message });
+    }
 
     if (
       message === "Routine is not active" ||

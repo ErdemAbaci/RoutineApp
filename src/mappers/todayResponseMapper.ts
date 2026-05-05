@@ -1,12 +1,18 @@
 import type { Routine } from "../types/routine";
 import type { RoutineCompletion } from "../types/completion";
+import { getRoutinePoints } from "../services/routines/routineScoring";
 
-export type TodayRoutineCompletionStatus = "pending" | "done" | "skipped";
+export type TodayRoutineCompletionStatus =
+  | "pending"
+  | "done"
+  | "skipped"
+  | "missed";
 
 export type TodayRoutineResponse = {
   routineId: string;
   title: string;
   category: string;
+  points: number;
   scheduledTime: string;
   frequencyType: string;
   reminderEnabled: boolean;
@@ -22,12 +28,11 @@ export function toTodayRoutineResponse(
     routineId: routine.id,
     title: routine.title,
     category: routine.category,
+    points: getRoutinePoints(routine),
     scheduledTime: routine.scheduledTime,
     frequencyType: routine.frequencyType,
     reminderEnabled: routine.reminderEnabled,
-    completionStatus: completion?.status === "done" || completion?.status === "skipped"
-      ? completion.status
-      : "pending",
+    completionStatus: completion?.status ?? "pending",
     completedAt: completion?.completedAt ?? null,
   };
 }

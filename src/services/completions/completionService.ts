@@ -1,5 +1,6 @@
 import { completionRepository } from "../../repositories/completionRepository";
 import { routineRepository } from "../../repositories/routineRepository";
+import { summaryRepository } from "../../repositories/summaryRepository";
 import { isRoutineActiveOnDate } from "../schedule/scheduleService";
 import { formatDateKey } from "../../utils/date";
 import type { RoutineCompletion } from "../../types/completion";
@@ -24,6 +25,12 @@ export async function markRoutineAsCompleted(
 
   const now = new Date();
   const date = formatDateKey(now);
+
+  const existingSummary = await summaryRepository.getByOwnerAndDate(ownerId, date);
+
+  if (existingSummary?.finalized) {
+    throw new Error("This day has already been finalized");
+  }
 
   if (!isRoutineActiveOnDate(routine, now)) {
     throw new Error("Routine is not scheduled for today");
@@ -65,6 +72,12 @@ export async function markRoutineAsSkipped(
 
   const now = new Date();
   const date = formatDateKey(now);
+
+  const existingSummary = await summaryRepository.getByOwnerAndDate(ownerId, date);
+
+  if (existingSummary?.finalized) {
+    throw new Error("This day has already been finalized");
+  }
 
   if (!isRoutineActiveOnDate(routine, now)) {
     throw new Error("Routine is not scheduled for today");

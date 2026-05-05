@@ -62,4 +62,24 @@ export const summaryRepository = {
 
     return (response.Items as DailySummary[] | undefined) ?? [];
   },
+ 
+  async getLatestByOwner(ownerId: string): Promise<DailySummary | null> {
+    const response = await dynamoDb.send(
+      new QueryCommand({
+        TableName: getTableName(),
+        IndexName: "ownerId-date-index",
+        KeyConditionExpression: "ownerId = :ownerId",
+        ExpressionAttributeValues: {
+          ":ownerId": ownerId,
+        },
+        ScanIndexForward: false,
+        Limit: 1,
+      }),
+    );
+
+    const items = response.Items as DailySummary[] | undefined;
+
+    return items?.[0] ?? null;
+  },  
 };
+
