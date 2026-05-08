@@ -79,6 +79,11 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
         severity: points >= HIGH_VALUE_POINT_THRESHOLD ? "high" : "medium",
         title: "Riskteki rutin",
         message: `${routineTitle} son günlerde sık kaçıyor. Daha küçük bir hedefe bölmeyi veya saatini değiştirmeyi deneyebilirsin.`,
+        action: {
+          type: "review_routine",
+          label: "Rutini gözden geçir",
+          targetRoutineId: routineId,
+        },
         routineId,
         category: routine?.category,
         metric: {
@@ -95,6 +100,11 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
         severity: "medium",
         title: "Sık skiplenen rutin",
         message: `${routineTitle} sık skipleniyor. Sıklığını, saatini veya hedefini biraz daha gerçekçi hale getirmek iyi olabilir.`,
+        action: {
+          type: "review_routine",
+          label: "Rutini düzenle",
+          targetRoutineId: routineId,
+        },
         routineId,
         category: routine?.category,
         metric: {
@@ -111,6 +121,11 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
         severity: points >= 20 ? "high" : "medium",
         title: "Yüksek puanlı rutin kaçıyor",
         message: `${routineTitle} ${points} puanlık bir rutin. Kaçması günlük badge'i belirgin etkiliyor.`,
+        action: {
+          type: "prioritize_routine",
+          label: "Öncelik ver",
+          targetRoutineId: routineId,
+        },
         routineId,
         category: routine?.category,
         metric: {
@@ -136,6 +151,10 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
       title: "Streak riskte",
       message:
         "Bu hafta birkaç gün tamamen kaçmış. Bugün düşük puanlı bir rutinle ritme dönmek iyi bir başlangıç olabilir.",
+      action: {
+        type: "complete_easy_routine",
+        label: "Kolay bir rutin tamamla",
+      },
       metric: {
         windowDays: WINDOW_DAYS,
         count: missedBadgeCount,
@@ -151,6 +170,10 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
       title: "Güçlü tempo",
       message:
         "Bu hafta güçlü gidiyorsun. Bu tempo freeze hakkı kazanma ritmini destekliyor.",
+      action: {
+        type: "keep_momentum",
+        label: "Tempoyu koru",
+      },
       metric: {
         windowDays: WINDOW_DAYS,
         count: goldBadgeCount,
