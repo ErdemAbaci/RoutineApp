@@ -277,11 +277,14 @@ export async function finalizeDailySummary(params: {
 
   await Promise.all(
     missedCompletions.map((completion) =>
-      completionRepository.upsert(completion),
+      completionRepository.createMissedIfNotExists(completion),
     ),
   );
 
-  const allCompletions = [...existingCompletions, ...missedCompletions];
+  const allCompletions = await completionRepository.listByOwnerAndDate(
+    ownerId,
+    date,
+  );
   const summaryPreview = await buildAndSaveDailySummary({
     ownerId,
     date,

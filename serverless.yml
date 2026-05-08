@@ -16,6 +16,7 @@ provider:
     COMPLETIONS_TABLE_NAME: ${self:custom.completionsTableName}
     DAILY_SUMMARIES_TABLE_NAME: ${self:custom.dailySummariesTableName}
     GAMIFICATION_STATE_TABLE_NAME: ${self:custom.gamificationStateTableName}
+    APP_TIME_ZONE: Europe/Istanbul
   iam:
     role:
       statements:
@@ -25,6 +26,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:UpdateItem
+            - dynamodb:TransactWriteItems
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}/index/*

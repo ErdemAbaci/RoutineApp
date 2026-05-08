@@ -1,4 +1,5 @@
 import type { Routine } from "../../types/routine";
+import { getDayOfWeek } from "../../utils/date";
 
 export function isRoutineActiveOnDate(routine: Routine, date: Date): boolean {
   if (routine.status !== "active") {
@@ -9,7 +10,7 @@ export function isRoutineActiveOnDate(routine: Routine, date: Date): boolean {
     return true;
   }
 
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = getDayOfWeek(date);
 
   if (
     routine.frequencyType === "weekly" ||

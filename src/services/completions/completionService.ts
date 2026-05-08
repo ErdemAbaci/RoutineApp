@@ -47,7 +47,7 @@ export async function markRoutineAsCompleted(
     updatedAt: now.toISOString(),
   };
 
-  await completionRepository.upsert(completion);
+  await completionRepository.saveUserCompletionIfDayOpen(completion);
 
   return completion;
 }
@@ -93,7 +93,7 @@ export async function markRoutineAsSkipped(
     updatedAt: now.toISOString(),
   };
 
-  await completionRepository.upsert(completion);
+  await completionRepository.saveUserCompletionIfDayOpen(completion);
 
   return completion;
 }

@@ -2,6 +2,7 @@ import { completionRepository } from "../../repositories/completionRepository";
 import { routineRepository } from "../../repositories/routineRepository";
 import { summaryRepository } from "../../repositories/summaryRepository";
 import { getRoutinePoints } from "../routines/routineScoring";
+import { getDateKeyDaysAgo } from "../../utils/date";
 import type { RoutineCompletion } from "../../types/completion";
 import type { Insight } from "../../types/insight";
 import type { Routine } from "../../types/routine";
@@ -15,13 +16,6 @@ const severityOrder = {
   low: 2,
   positive: 3,
 };
-
-function getDateKeyDaysAgo(daysAgo: number): string {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() - daysAgo);
-
-  return date.toISOString().slice(0, 10);
-}
 
 function groupCompletionsByRoutineId(
   completions: RoutineCompletion[],

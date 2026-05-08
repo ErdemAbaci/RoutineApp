@@ -3,6 +3,7 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   QueryCommand,
+  TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { RoutineCompletion } from "../types/completion";
 
@@ -19,6 +20,16 @@ function getTableName() {
   return tableName;
 }
 
+function getDailySummariesTableName() {
+  const tableName = process.env.DAILY_SUMMARIES_TABLE_NAME;
+
+  if (!tableName) {
+    throw new Error("DAILY_SUMMARIES_TABLE_NAME environment variable is required");
+  }
+
+  return tableName;
+}
+
 export const completionRepository = {
   async upsert(completion: RoutineCompletion): Promise<void> {
     await dynamoDb.send(
@@ -27,6 +38,80 @@ export const completionRepository = {
         Item: completion,
       }),
     );
+  },
+
+  async saveUserCompletionIfDayOpen(
+    completion: RoutineCompletion,
+  ): Promise<void> {
+    try {
+      await dynamoDb.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              ConditionCheck: {
+                TableName: getDailySummariesTableName(),
+                Key: {
+                  id: `${completion.ownerId}#${completion.date}`,
+                },
+                ConditionExpression:
+                  "attribute_not_exists(id) OR finalized = :notFinalized",
+                ExpressionAttributeValues: {
+                  ":notFinalized": false,
+                },
+              },
+            },
+            {
+              Put: {
+                TableName: getTableName(),
+                Item: completion,
+                ConditionExpression:
+                  "attribute_not_exists(id) OR #status <> :missed",
+                ExpressionAttributeNames: {
+                  "#status": "status",
+                },
+                ExpressionAttributeValues: {
+                  ":missed": "missed",
+                },
+              },
+            },
+          ],
+        }),
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "TransactionCanceledException"
+      ) {
+        throw new Error("This day has already been finalized");
+      }
+
+      throw error;
+    }
+  },
+
+  async createMissedIfNotExists(
+    completion: RoutineCompletion,
+  ): Promise<boolean> {
+    try {
+      await dynamoDb.send(
+        new PutCommand({
+          TableName: getTableName(),
+          Item: completion,
+          ConditionExpression: "attribute_not_exists(id)",
+        }),
+      );
+
+      return true;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "ConditionalCheckFailedException"
+      ) {
+        return false;
+      }
+
+      throw error;
+    }
   },
 
   async listByOwnerAndDate(
