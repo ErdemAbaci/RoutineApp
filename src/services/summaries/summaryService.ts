@@ -28,11 +28,39 @@ function getDaysBetween(date: string, previousDate: string): number {
   return Math.round((dateTime - previousDateTime) / 86400000);
 }
 
+function hasSameSummaryValues(
+  existingSummary: DailySummary,
+  nextSummary: DailySummary,
+): boolean {
+  return (
+    existingSummary.totalRoutines === nextSummary.totalRoutines &&
+    existingSummary.completedCount === nextSummary.completedCount &&
+    existingSummary.skippedCount === nextSummary.skippedCount &&
+    existingSummary.missedCount === nextSummary.missedCount &&
+    existingSummary.totalPoints === nextSummary.totalPoints &&
+    existingSummary.earnedPoints === nextSummary.earnedPoints &&
+    existingSummary.skippedPoints === nextSummary.skippedPoints &&
+    existingSummary.missedPoints === nextSummary.missedPoints &&
+    existingSummary.pointCompletionRate === nextSummary.pointCompletionRate &&
+    existingSummary.completionRate === nextSummary.completionRate &&
+    existingSummary.badge === nextSummary.badge &&
+    existingSummary.streakBeforeThisDay === nextSummary.streakBeforeThisDay &&
+    existingSummary.streakAfterThisDay === nextSummary.streakAfterThisDay &&
+    existingSummary.freezeUsed === nextSummary.freezeUsed &&
+    existingSummary.freezeEarned === nextSummary.freezeEarned &&
+    existingSummary.freezeBalanceAfterThisDay ===
+      nextSummary.freezeBalanceAfterThisDay &&
+    existingSummary.streakProtected === nextSummary.streakProtected &&
+    existingSummary.finalized === nextSummary.finalized
+  );
+}
+
 async function buildAndSaveDailySummary(params: {
   ownerId: string;
   date: string;
   activeRoutines: Routine[];
   completions: RoutineCompletion[];
+  persist?: boolean;
   finalized?: boolean;
   gamification?: {
     streakBeforeThisDay: number;
@@ -48,6 +76,7 @@ async function buildAndSaveDailySummary(params: {
     date,
     activeRoutines,
     completions,
+    persist = true,
     finalized,
     gamification,
   } = params;
@@ -133,6 +162,8 @@ async function buildAndSaveDailySummary(params: {
     date,
   );
 
+  const shouldFinalize = finalized === true || existingSummary?.finalized === true;
+
   const summary: DailySummary = {
     id: `${ownerId}#${date}`,
     ownerId,
@@ -168,10 +199,18 @@ async function buildAndSaveDailySummary(params: {
       gamification?.streakProtected ??
       existingSummary?.streakProtected ??
       false,
-    finalized: finalized ?? existingSummary?.finalized ?? false,
+    finalized: shouldFinalize,
     createdAt: existingSummary?.createdAt ?? now,
     updatedAt: now,
   };
+
+  if (!persist) {
+    return summary;
+  }
+
+  if (existingSummary && hasSameSummaryValues(existingSummary, summary)) {
+    return existingSummary;
+  }
 
   await summaryRepository.upsert(summary);
 
@@ -248,6 +287,7 @@ export async function finalizeDailySummary(params: {
     date,
     activeRoutines,
     completions: allCompletions,
+    persist: false,
     finalized: false,
   });
 

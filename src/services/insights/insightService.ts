@@ -50,8 +50,16 @@ export async function listInsights(ownerId: string): Promise<Insight[]> {
     summaryRepository.listByOwner(ownerId, WINDOW_DAYS),
   ]);
 
-  const routinesById = new Map(routines.map((routine) => [routine.id, routine]));
-  const completionsByRoutineId = groupCompletionsByRoutineId(completions);
+  const activeRoutines = routines.filter((routine) => routine.status === "active");
+  const routinesById = new Map(
+    activeRoutines.map((routine) => [routine.id, routine]),
+  );
+  const activeRoutineCompletions = completions.filter((completion) =>
+    routinesById.has(completion.routineId),
+  );
+  const completionsByRoutineId = groupCompletionsByRoutineId(
+    activeRoutineCompletions,
+  );
   const finalizedSummaries = summaries.filter(
     (summary) =>
       summary.finalized &&
