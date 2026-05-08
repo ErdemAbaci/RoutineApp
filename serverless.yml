@@ -50,6 +50,13 @@ functions:
       - httpApi:
           path: /routines
           method: get
+
+  listRoutineTemplates:
+    handler: src/handlers/listRoutineTemplates.handler
+    events:
+      - httpApi:
+          path: /routine-templates
+          method: get
   
   getRoutine:
     handler: src/handlers/getRoutine.handler
