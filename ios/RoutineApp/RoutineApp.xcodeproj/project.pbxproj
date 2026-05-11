@@ -1,0 +1,256 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000001 /* RoutineAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000101 /* RoutineAppApp.swift */; };
+		AA0000000000000000000002 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000102 /* RootTabView.swift */; };
+		AA0000000000000000000003 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000103 /* TodayView.swift */; };
+		AA0000000000000000000004 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000104 /* InsightsView.swift */; };
+		AA0000000000000000000005 /* TemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000105 /* TemplatesView.swift */; };
+		AA0000000000000000000006 /* RoutinesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000106 /* RoutinesView.swift */; };
+		AA0000000000000000000007 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000107 /* APIClient.swift */; };
+		AA0000000000000000000008 /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000108 /* TodayViewModel.swift */; };
+		AA0000000000000000000009 /* InsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000109 /* InsightsViewModel.swift */; };
+		AA000000000000000000000A /* TemplatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010A /* TemplatesViewModel.swift */; };
+		AA000000000000000000000B /* RoutineModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010B /* RoutineModels.swift */; };
+		AA000000000000000000000C /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010C /* TodayModels.swift */; };
+		AA000000000000000000000D /* InsightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010D /* InsightModels.swift */; };
+		AA000000000000000000000E /* TemplateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010E /* TemplateModels.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000200 /* RoutineApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoutineApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000101 /* RoutineAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineAppApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000102 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RootTabView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000103 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/TodayView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000104 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/InsightsView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000105 /* TemplatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/TemplatesView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000106 /* RoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RoutinesView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000107 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking/APIClient.swift; sourceTree = "<group>"; };
+		AA0000000000000000000108 /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/TodayViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000109 /* InsightsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/InsightsViewModel.swift; sourceTree = "<group>"; };
+		AA000000000000000000010A /* TemplatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/TemplatesViewModel.swift; sourceTree = "<group>"; };
+		AA000000000000000000010B /* RoutineModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/RoutineModels.swift; sourceTree = "<group>"; };
+		AA000000000000000000010C /* TodayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TodayModels.swift; sourceTree = "<group>"; };
+		AA000000000000000000010D /* InsightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/InsightModels.swift; sourceTree = "<group>"; };
+		AA000000000000000000010E /* TemplateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemplateModels.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000300 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000400 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000500 /* RoutineApp */,
+				AA0000000000000000000600 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000500 /* RoutineApp */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000101 /* RoutineAppApp.swift */,
+				AA0000000000000000000102 /* RootTabView.swift */,
+				AA0000000000000000000103 /* TodayView.swift */,
+				AA0000000000000000000104 /* InsightsView.swift */,
+				AA0000000000000000000105 /* TemplatesView.swift */,
+				AA0000000000000000000106 /* RoutinesView.swift */,
+				AA0000000000000000000107 /* APIClient.swift */,
+				AA0000000000000000000108 /* TodayViewModel.swift */,
+				AA0000000000000000000109 /* InsightsViewModel.swift */,
+				AA000000000000000000010A /* TemplatesViewModel.swift */,
+				AA000000000000000000010B /* RoutineModels.swift */,
+				AA000000000000000000010C /* TodayModels.swift */,
+				AA000000000000000000010D /* InsightModels.swift */,
+				AA000000000000000000010E /* TemplateModels.swift */,
+			);
+			path = RoutineApp;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000600 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000200 /* RoutineApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000700 /* RoutineApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000900 /* Build configuration list for PBXNativeTarget "RoutineApp" */;
+			buildPhases = (
+				AA0000000000000000000800 /* Sources */,
+				AA0000000000000000000300 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RoutineApp;
+			productName = RoutineApp;
+			productReference = AA0000000000000000000200 /* RoutineApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000A00 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					AA0000000000000000000700 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+				};
+			};
+			buildConfigurationList = AA0000000000000000000B00 /* Build configuration list for PBXProject "RoutineApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA0000000000000000000400;
+			productRefGroup = AA0000000000000000000600 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000000000000000000700 /* RoutineApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000800 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000001 /* RoutineAppApp.swift in Sources */,
+				AA0000000000000000000002 /* RootTabView.swift in Sources */,
+				AA0000000000000000000003 /* TodayView.swift in Sources */,
+				AA0000000000000000000004 /* InsightsView.swift in Sources */,
+				AA0000000000000000000005 /* TemplatesView.swift in Sources */,
+				AA0000000000000000000006 /* RoutinesView.swift in Sources */,
+				AA0000000000000000000007 /* APIClient.swift in Sources */,
+				AA0000000000000000000008 /* TodayViewModel.swift in Sources */,
+				AA0000000000000000000009 /* InsightsViewModel.swift in Sources */,
+				AA000000000000000000000A /* TemplatesViewModel.swift in Sources */,
+				AA000000000000000000000B /* RoutineModels.swift in Sources */,
+				AA000000000000000000000C /* TodayModels.swift in Sources */,
+				AA000000000000000000000D /* InsightModels.swift in Sources */,
+				AA000000000000000000000E /* TemplateModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000C00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.erdemabaci.routineapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000C01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.erdemabaci.routineapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000D00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000D01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000900 /* Build configuration list for PBXNativeTarget "RoutineApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000C00 /* Debug */,
+				AA0000000000000000000C01 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AA0000000000000000000B00 /* Build configuration list for PBXProject "RoutineApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000D00 /* Debug */,
+				AA0000000000000000000D01 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000000000000000000A00 /* Project object */;
+}

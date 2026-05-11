@@ -1,7 +1,12 @@
 .env
+.DS_Store
 node_modules/
 .build/
 .serverless/
+.xcode-derived-data/
+*.xcuserstate
+xcuserdata/
+ios/**/.DS_Store
 .terraform/
 **/.terraform/
 *.tfstate
