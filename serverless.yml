@@ -26,6 +26,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:UpdateItem
+            - dynamodb:ConditionCheckItem
             - dynamodb:TransactWriteItems
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.routinesTableName}
@@ -133,4 +134,11 @@ functions:
     events:
       - httpApi:
           path: /summaries/{date}/finalize
-          method: post          
+          method: post
+
+  finalizeYesterdaySummary:
+    handler: src/handlers/finalizeYesterdaySummary.handler
+    events:
+      - schedule:
+          rate: cron(10 21 * * ? *)
+          enabled: true

@@ -1,6 +1,12 @@
 import { randomUUID } from "crypto";
 import { routineRepository } from "../repositories/routineRepository";
+import { summaryRepository } from "../repositories/summaryRepository";
 import { validateCreateRoutineBody } from "../services/routines/routineValidation";
+import {
+  formatDateKey,
+  formatTimeKey,
+  getDateKeyDaysFromDate,
+} from "../utils/date";
 import type { Routine } from "../types/routine";
 
 type ApiEvent = {
@@ -42,24 +48,37 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
     return json(400, { message: validation.message });
   }
 
-  const now = new Date().toISOString();
-
-  const routine: Routine = {
-    id: randomUUID(),
-    ownerId: "temporary-user-id",
-    title: validation.data.title,
-    category: validation.data.category,
-    description: validation.data.description,
-    frequencyType: validation.data.frequencyType,
-    daysOfWeek: validation.data.daysOfWeek,
-    scheduledTime: validation.data.scheduledTime,
-    reminderEnabled: validation.data.reminderEnabled,
-    status: "active",
-    createdAt: now,
-    updatedAt: now,
-  };
-
   try {
+    const ownerId = "temporary-user-id";
+    const nowDate = new Date();
+    const now = nowDate.toISOString();
+    const today = formatDateKey(nowDate);
+    const currentTime = formatTimeKey(nowDate);
+    const existingSummary = await summaryRepository.getByOwnerAndDate(
+      ownerId,
+      today,
+    );
+    const startDate =
+      existingSummary?.finalized || validation.data.scheduledTime < currentTime
+        ? getDateKeyDaysFromDate(1, nowDate)
+        : today;
+
+    const routine: Routine = {
+      id: randomUUID(),
+      ownerId,
+      title: validation.data.title,
+      category: validation.data.category,
+      description: validation.data.description,
+      frequencyType: validation.data.frequencyType,
+      daysOfWeek: validation.data.daysOfWeek,
+      scheduledTime: validation.data.scheduledTime,
+      startDate,
+      reminderEnabled: validation.data.reminderEnabled,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    };
+
     await routineRepository.create(routine);
 
     return json(201, routine);

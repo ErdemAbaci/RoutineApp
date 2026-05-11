@@ -40,19 +40,26 @@ export async function handler(): Promise<ApiResponse> {
       completions.map((completion) => [completion.routineId, completion]),
     );
 
-    const items = activeTodayRoutines.map((routine) =>
-      toTodayRoutineResponse(
-        routine,
-        completionsByRoutineId.get(routine.id),
-      ),
-    );
-
     const summary = await calculateAndSaveDailySummary({
       ownerId,
       date,
       activeRoutines: activeTodayRoutines,
       completions,
     });
+    const routinesById = new Map(routines.map((routine) => [routine.id, routine]));
+    const itemRoutines = summary.finalized
+      ? completions
+          .map((completion) => routinesById.get(completion.routineId))
+          .filter((routine): routine is NonNullable<typeof routine> =>
+            routine !== undefined,
+          )
+      : activeTodayRoutines;
+    const items = itemRoutines.map((routine) =>
+      toTodayRoutineResponse(
+        routine,
+        completionsByRoutineId.get(routine.id),
+      ),
+    );
     const gamificationState = await gamificationStateRepository.getByOwner(
       ownerId,
     );

@@ -21,6 +21,7 @@ export type Routine = {
   frequencyType: RoutineFrequencyType;
   daysOfWeek?: number[];
   scheduledTime: string;
+  startDate?: string;
   reminderEnabled: boolean;
   status: RoutineStatus;
   createdAt: string;

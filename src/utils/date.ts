@@ -5,17 +5,31 @@ const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
   month: "2-digit",
   day: "2-digit",
 });
+const timeKeyFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: DEFAULT_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 export function formatDateKey(date: Date): string {
   return dateKeyFormatter.format(date);
 }
 
 export function getDateKeyDaysAgo(daysAgo: number, now = new Date()): string {
+  return getDateKeyDaysFromDate(-daysAgo, now);
+}
+
+export function getDateKeyDaysFromDate(daysFromDate: number, now = new Date()): string {
   const date = new Date(now);
 
-  date.setDate(date.getDate() - daysAgo);
+  date.setUTCDate(date.getUTCDate() + daysFromDate);
 
   return formatDateKey(date);
+}
+
+export function formatTimeKey(date: Date): string {
+  return timeKeyFormatter.format(date);
 }
 
 export function getDayOfWeek(date: Date): number {
