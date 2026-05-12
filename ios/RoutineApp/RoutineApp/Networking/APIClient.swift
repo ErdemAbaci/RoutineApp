@@ -24,9 +24,7 @@ struct ErrorResponse: Codable {
 final class APIClient {
     static let shared = APIClient()
 
-    // TODO: Serverless deploy sonrası API Gateway URL'ini buraya yaz.
-    // Örnek: https://abc123.execute-api.eu-central-1.amazonaws.com
-    private let baseURL = URL(string: "https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com")
+    private let baseURL = URL(string: Bundle.main.object(forInfoDictionaryKey: "APIBaseURL") as? String ?? "")
     private let decoder = JSONDecoder()
 
     private init() {}

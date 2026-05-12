@@ -1,0 +1,2 @@
+API_BASE_URL = https:/$()/YOUR_API_ID.execute-api.eu-central-1.amazonaws.com
+#include? "Local.xcconfig"

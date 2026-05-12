@@ -18,19 +18,20 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 ## Connect Backend
 
-Set the API Gateway URL in:
+The app reads its backend URL from Xcode config, not from Swift source.
+Create or update this local-only file:
 
 ```text
-RoutineApp/Networking/APIClient.swift
+ios/RoutineApp/Config/Local.xcconfig
 ```
 
-Replace:
+Use this format:
 
-```swift
-https://YOUR_API_ID.execute-api.eu-central-1.amazonaws.com
+```text
+API_BASE_URL = https:/$()/YOUR_API_ID.execute-api.eu-central-1.amazonaws.com
 ```
 
-with the Serverless deploy URL.
+`Local.xcconfig` is ignored by git, so real dev URLs do not get committed.
 
 ## Current Screens
 
