@@ -22,6 +22,7 @@ struct TodayRoutine: Identifiable, Codable {
 }
 
 struct TodaySummary: Codable {
+    let date: String?
     let totalRoutines: Int
     let completedCount: Int
     let skippedCount: Int

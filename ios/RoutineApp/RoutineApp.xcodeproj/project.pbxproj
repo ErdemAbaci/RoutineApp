@@ -21,6 +21,9 @@
 		AA000000000000000000000C /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010C /* TodayModels.swift */; };
 		AA000000000000000000000D /* InsightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010D /* InsightModels.swift */; };
 		AA000000000000000000000E /* TemplateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010E /* TemplateModels.swift */; };
+		AA000000000000000000000F /* DashboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010F /* DashboardModels.swift */; };
+		AA0000000000000000000010 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* DashboardViewModel.swift */; };
+		AA0000000000000000000011 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000111 /* DashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +42,9 @@
 		AA000000000000000000010C /* TodayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TodayModels.swift; sourceTree = "<group>"; };
 		AA000000000000000000010D /* InsightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/InsightModels.swift; sourceTree = "<group>"; };
 		AA000000000000000000010E /* TemplateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemplateModels.swift; sourceTree = "<group>"; };
+		AA000000000000000000010F /* DashboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DashboardModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000110 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/DashboardViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000111 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/DashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,14 +75,17 @@
 				AA0000000000000000000104 /* InsightsView.swift */,
 				AA0000000000000000000105 /* TemplatesView.swift */,
 				AA0000000000000000000106 /* RoutinesView.swift */,
+				AA0000000000000000000111 /* DashboardView.swift */,
 				AA0000000000000000000107 /* APIClient.swift */,
 				AA0000000000000000000108 /* TodayViewModel.swift */,
 				AA0000000000000000000109 /* InsightsViewModel.swift */,
 				AA000000000000000000010A /* TemplatesViewModel.swift */,
+				AA0000000000000000000110 /* DashboardViewModel.swift */,
 				AA000000000000000000010B /* RoutineModels.swift */,
 				AA000000000000000000010C /* TodayModels.swift */,
 				AA000000000000000000010D /* InsightModels.swift */,
 				AA000000000000000000010E /* TemplateModels.swift */,
+				AA000000000000000000010F /* DashboardModels.swift */,
 			);
 			path = RoutineApp;
 			sourceTree = "<group>";
@@ -152,14 +161,17 @@
 				AA0000000000000000000004 /* InsightsView.swift in Sources */,
 				AA0000000000000000000005 /* TemplatesView.swift in Sources */,
 				AA0000000000000000000006 /* RoutinesView.swift in Sources */,
+				AA0000000000000000000011 /* DashboardView.swift in Sources */,
 				AA0000000000000000000007 /* APIClient.swift in Sources */,
 				AA0000000000000000000008 /* TodayViewModel.swift in Sources */,
 				AA0000000000000000000009 /* InsightsViewModel.swift in Sources */,
 				AA000000000000000000000A /* TemplatesViewModel.swift in Sources */,
+				AA0000000000000000000010 /* DashboardViewModel.swift in Sources */,
 				AA000000000000000000000B /* RoutineModels.swift in Sources */,
 				AA000000000000000000000C /* TodayModels.swift in Sources */,
 				AA000000000000000000000D /* InsightModels.swift in Sources */,
 				AA000000000000000000000E /* TemplateModels.swift in Sources */,
+				AA000000000000000000000F /* DashboardModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

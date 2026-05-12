@@ -3,6 +3,11 @@ import SwiftUI
 struct RootTabView: View {
     var body: some View {
         TabView {
+            DashboardView()
+                .tabItem {
+                    Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis")
+                }
+
             TodayView()
                 .tabItem {
                     Label("Today", systemImage: "checklist")

@@ -24,3 +24,16 @@ struct RoutineTemplateItem: Identifiable, Codable {
 struct RoutineTemplatesResponse: Codable {
     let items: [RoutineTemplate]
 }
+
+struct ApplyRoutineTemplateResponse: Codable {
+    let templateId: String
+    let createdCount: Int
+    let skippedCount: Int
+    let created: [Routine]
+    let skipped: [SkippedTemplateRoutine]
+}
+
+struct SkippedTemplateRoutine: Codable {
+    let title: String
+    let reason: String
+}

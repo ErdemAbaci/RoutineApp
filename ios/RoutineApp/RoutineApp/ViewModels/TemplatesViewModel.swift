@@ -4,6 +4,7 @@ import Foundation
 final class TemplatesViewModel: ObservableObject {
     @Published var templates: [RoutineTemplate] = []
     @Published var isLoading = false
+    @Published var isApplyingTemplate = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
 
@@ -30,16 +31,15 @@ final class TemplatesViewModel: ObservableObject {
     func createRoutines(from template: RoutineTemplate) async {
         errorMessage = nil
         successMessage = nil
+        isApplyingTemplate = true
 
         do {
-            for item in template.items {
-                let draft = RoutineDraft(templateItem: item)
-                let _: Routine = try await apiClient.post("routines", body: draft)
-            }
-
-            successMessage = "\(template.title) rutinlere eklendi."
+            let response: ApplyRoutineTemplateResponse = try await apiClient.post("routine-templates/\(template.id)/apply")
+            successMessage = "\(response.createdCount) yeni rutin eklendi, \(response.skippedCount) tekrar atlandı."
         } catch {
             errorMessage = error.localizedDescription
         }
+
+        isApplyingTemplate = false
     }
 }

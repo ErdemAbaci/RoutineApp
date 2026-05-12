@@ -24,8 +24,20 @@ struct TodayView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Bugünkü Rutinler")
-                                    .font(.headline)
+                                HStack {
+                                    Text("Bugünkü Rutinler")
+                                        .font(.title3.bold())
+
+                                    Spacer()
+
+                                    Text("\(today.items.count) adet")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(.secondary.opacity(0.12))
+                                        .clipShape(Capsule())
+                                }
 
                                 if today.items.isEmpty {
                                     ContentUnavailableView(
@@ -51,6 +63,7 @@ struct TodayView: View {
                         }
                         .padding()
                     }
+                    .background(Color(.systemGroupedBackground))
                 } else {
                     ContentUnavailableView(
                         "Bugün ekranı hazır değil",
@@ -86,42 +99,77 @@ private struct SummaryCard: View {
     let today: TodayResponse
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(today.date)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.76))
                     Text(today.summary.badge.capitalized)
-                        .font(.title2.bold())
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing) {
+                VStack(alignment: .trailing, spacing: 8) {
                     Text("\(today.summary.earnedPoints)/\(today.summary.totalPoints) puan")
                         .font(.headline)
+                        .foregroundStyle(.white)
                     Text("%\(today.summary.pointCompletionRate)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.78))
                 }
             }
 
-            Divider()
+            ProgressView(
+                value: Double(today.summary.earnedPoints),
+                total: Double(max(today.summary.totalPoints, 1))
+            )
+            .tint(.white)
 
-            HStack {
-                Label("\(today.gamification.currentStreak)", systemImage: "flame")
+            HStack(spacing: 10) {
+                HeroBadge(title: "Streak", value: "\(today.gamification.currentStreak)", systemImage: "flame.fill")
                 Spacer()
-                Label("\(today.gamification.freezeBalance)", systemImage: "snowflake")
+                HeroBadge(title: "Freeze", value: "\(today.gamification.freezeBalance)", systemImage: "snowflake")
                 Spacer()
-                Label(today.summary.finalized ? "Kapalı" : "Açık", systemImage: "lock")
+                HeroBadge(title: "Gün", value: today.summary.finalized ? "Kapalı" : "Açık", systemImage: today.summary.finalized ? "lock.fill" : "lock.open")
             }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
         }
-        .padding()
-        .background(.thinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(20)
+        .background(
+            LinearGradient(
+                colors: [Color.green, Color.blue],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: .blue.opacity(0.22), radius: 18, x: 0, y: 10)
+    }
+}
+
+private struct HeroBadge: View {
+    let title: String
+    let value: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.subheadline.weight(.bold))
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.72))
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.white.opacity(0.16))
+        .clipShape(Capsule())
     }
 }
 
@@ -132,11 +180,12 @@ private struct RoutineRowView: View {
     let onSkip: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(routine.title)
                         .font(.headline)
+                        .lineLimit(2)
                     Text("\(routine.category.rawValue) • \(routine.points) puan • \(routine.scheduledTime)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -153,20 +202,26 @@ private struct RoutineRowView: View {
                     .clipShape(Capsule())
             }
 
-            HStack {
-                Button("Complete", action: onComplete)
+            HStack(spacing: 10) {
+                Button(action: onComplete) {
+                    Label("Complete", systemImage: "checkmark.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
                     .buttonStyle(.borderedProminent)
                     .disabled(isFinalized || routine.completionStatus == .done)
 
-                Button("Skip", action: onSkip)
+                Button(action: onSkip) {
+                    Label("Skip", systemImage: "forward.circle")
+                        .frame(maxWidth: .infinity)
+                }
                     .buttonStyle(.bordered)
                     .disabled(isFinalized || routine.completionStatus == .skipped)
             }
         }
-        .padding()
+        .padding(16)
         .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
     }
 
     private var statusColor: Color {
