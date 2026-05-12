@@ -208,7 +208,7 @@ private struct RoutineRowView: View {
                         .frame(maxWidth: .infinity)
                 }
                     .buttonStyle(.borderedProminent)
-                    .disabled(isFinalized || routine.completionStatus == .done)
+                    .disabled(isCompleteDisabled)
 
                 Button(action: onSkip) {
                     Label("Skip", systemImage: "forward.circle")
@@ -216,6 +216,12 @@ private struct RoutineRowView: View {
                 }
                     .buttonStyle(.bordered)
                     .disabled(isFinalized || routine.completionStatus == .skipped)
+            }
+
+            if !isFinalized && !isScheduledTimeReached && routine.completionStatus == .pending {
+                Label("Complete \(routine.scheduledTime) saatinde açılır", systemImage: "clock")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(16)
@@ -235,5 +241,16 @@ private struct RoutineRowView: View {
         case .pending:
             return .blue
         }
+    }
+
+    private var isCompleteDisabled: Bool {
+        isFinalized || routine.completionStatus == .done || !isScheduledTimeReached
+    }
+
+    private var isScheduledTimeReached: Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+
+        return formatter.string(from: Date()) >= routine.scheduledTime
     }
 }

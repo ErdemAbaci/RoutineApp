@@ -53,7 +53,8 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
 
     if (
       message === "Routine is not active" ||
-      message === "Routine is not scheduled for today"
+      message === "Routine is not scheduled for today" ||
+      message === "Routine is not ready yet"
     ) {
       return json(400, { message });
     }

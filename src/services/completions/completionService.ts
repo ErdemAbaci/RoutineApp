@@ -2,7 +2,7 @@ import { completionRepository } from "../../repositories/completionRepository";
 import { routineRepository } from "../../repositories/routineRepository";
 import { summaryRepository } from "../../repositories/summaryRepository";
 import { isRoutineActiveOnDate } from "../schedule/scheduleService";
-import { formatDateKey } from "../../utils/date";
+import { formatDateKey, formatTimeKey } from "../../utils/date";
 import type { RoutineCompletion } from "../../types/completion";
 
 export async function markRoutineAsCompleted(
@@ -34,6 +34,10 @@ export async function markRoutineAsCompleted(
 
   if (!isRoutineActiveOnDate(routine, now)) {
     throw new Error("Routine is not scheduled for today");
+  }
+
+  if (routine.scheduledTime > formatTimeKey(now)) {
+    throw new Error("Routine is not ready yet");
   }
 
   const completion: RoutineCompletion = {
