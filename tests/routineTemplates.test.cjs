@@ -29,3 +29,70 @@ test("routine template items match create routine payload shape", () => {
     assert.equal(typeof item.reminderEnabled, "boolean");
   }
 });
+
+test("template apply skips duplicate active routines", async () => {
+  const {
+    routineRepository,
+  } = require("../.build/repositories/routineRepository.js");
+  const {
+    summaryRepository,
+  } = require("../.build/repositories/summaryRepository.js");
+  const {
+    createMissingTemplateRoutines,
+  } = require("../.build/services/routines/routineCreationService.js");
+  const originalListByOwner = routineRepository.listByOwner;
+  const originalCreate = routineRepository.create;
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+  const created = [];
+
+  routineRepository.listByOwner = async () => [
+    {
+      id: "routine-water",
+      ownerId: "temporary-user-id",
+      title: "Su iç",
+      category: "water",
+      frequencyType: "daily",
+      scheduledTime: "08:00",
+      reminderEnabled: true,
+      status: "active",
+      createdAt: "2026-05-10T09:00:00.000Z",
+      updatedAt: "2026-05-10T09:00:00.000Z",
+    },
+  ];
+  routineRepository.create = async (routine) => {
+    created.push(routine);
+  };
+  summaryRepository.getByOwnerAndDate = async () => null;
+
+  try {
+    const result = await createMissingTemplateRoutines({
+      ownerId: "temporary-user-id",
+      nowDate: new Date("2026-05-11T04:00:00.000Z"),
+      items: [
+        {
+          title: "Su iç",
+          category: "water",
+          frequencyType: "daily",
+          scheduledTime: "08:00",
+          reminderEnabled: true,
+        },
+        {
+          title: "Vitamin al",
+          category: "vitamin",
+          frequencyType: "daily",
+          scheduledTime: "08:15",
+          reminderEnabled: true,
+        },
+      ],
+    });
+
+    assert.equal(result.created.length, 1);
+    assert.equal(result.skipped.length, 1);
+    assert.equal(result.skipped[0].reason, "duplicate");
+    assert.equal(created[0].title, "Vitamin al");
+  } finally {
+    routineRepository.listByOwner = originalListByOwner;
+    routineRepository.create = originalCreate;
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+  }
+});

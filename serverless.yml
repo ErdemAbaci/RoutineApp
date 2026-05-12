@@ -58,6 +58,13 @@ functions:
       - httpApi:
           path: /routine-templates
           method: get
+
+  applyRoutineTemplate:
+    handler: src/handlers/applyRoutineTemplate.handler
+    events:
+      - httpApi:
+          path: /routine-templates/{id}/apply
+          method: post
   
   getRoutine:
     handler: src/handlers/getRoutine.handler
@@ -127,6 +134,13 @@ functions:
     events:
       - httpApi:
           path: /insights
+          method: get
+
+  getDashboard:
+    handler: src/handlers/getDashboard.handler
+    events:
+      - httpApi:
+          path: /dashboard
           method: get
 
   finalizeSummaryByDate:

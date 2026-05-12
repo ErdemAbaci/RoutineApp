@@ -116,3 +116,7 @@ const routineTemplates: RoutineTemplate[] = [
 export function listRoutineTemplates(): RoutineTemplate[] {
   return routineTemplates;
 }
+
+export function getRoutineTemplateById(id: string): RoutineTemplate | null {
+  return routineTemplates.find((template) => template.id === id) ?? null;
+}
