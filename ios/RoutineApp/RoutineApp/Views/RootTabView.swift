@@ -27,6 +27,12 @@ struct RootTabView: View {
                 .tabItem {
                     Label("Routines", systemImage: "list.bullet")
                 }
+
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
         }
+        .tint(.teal)
     }
 }

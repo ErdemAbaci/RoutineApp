@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TodayView: View {
     @StateObject private var viewModel = TodayViewModel()
+    @State private var animateContent = false
 
     var body: some View {
         NavigationStack {
@@ -12,6 +13,8 @@ struct TodayView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
                             SummaryCard(today: today)
+                                .opacity(animateContent ? 1 : 0.7)
+                                .offset(y: animateContent ? 0 : 12)
 
                             if let message = today.gamification.motivationMessage {
                                 Text(message)
@@ -21,6 +24,7 @@ struct TodayView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(.orange.opacity(0.12))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .transition(.move(edge: .top).combined(with: .opacity))
                             }
 
                             VStack(alignment: .leading, spacing: 12) {
@@ -46,7 +50,7 @@ struct TodayView: View {
                                         description: Text("Routines veya Templates ekranından yeni rutin ekleyebilirsin.")
                                     )
                                 } else {
-                                    ForEach(today.items) { routine in
+                                    ForEach(Array(today.items.enumerated()), id: \.element.id) { index, routine in
                                         RoutineRowView(
                                             routine: routine,
                                             isFinalized: today.summary.finalized,
@@ -57,6 +61,9 @@ struct TodayView: View {
                                                 Task { await viewModel.skip(routine) }
                                             }
                                         )
+                                        .opacity(animateContent ? 1 : 0.0)
+                                        .offset(y: animateContent ? 0 : 18)
+                                        .animation(.smooth(duration: 0.42).delay(Double(index) * 0.05), value: animateContent)
                                     }
                                 }
                             }
@@ -82,6 +89,14 @@ struct TodayView: View {
             }
             .task {
                 await viewModel.loadToday()
+                withAnimation(.smooth(duration: 0.45)) {
+                    animateContent = true
+                }
+            }
+            .onChange(of: viewModel.today?.date) { _, _ in
+                withAnimation(.smooth(duration: 0.45)) {
+                    animateContent = true
+                }
             }
             .alert("Hata", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
@@ -90,6 +105,11 @@ struct TodayView: View {
                 Button("Tamam", role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .fullScreenCover(item: $viewModel.celebration) { celebration in
+                BadgeCelebrationView(celebration: celebration) {
+                    viewModel.dismissCelebration()
+                }
             }
         }
     }
@@ -108,6 +128,7 @@ private struct SummaryCard: View {
                     Text(today.summary.badge.capitalized)
                         .font(.system(size: 38, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
+                        .contentTransition(.numericText())
                 }
 
                 Spacer()
@@ -116,9 +137,11 @@ private struct SummaryCard: View {
                     Text("\(today.summary.earnedPoints)/\(today.summary.totalPoints) puan")
                         .font(.headline)
                         .foregroundStyle(.white)
+                        .contentTransition(.numericText())
                     Text("%\(today.summary.pointCompletionRate)")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.78))
+                        .contentTransition(.numericText())
                 }
             }
 
@@ -146,6 +169,13 @@ private struct SummaryCard: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .blue.opacity(0.22), radius: 18, x: 0, y: 10)
+        .overlay(alignment: .topTrailing) {
+            Image(systemName: today.summary.badge == "gold" ? "sparkles" : "star.fill")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(14)
+                .symbolEffect(.pulse.byLayer, value: today.summary.badge)
+        }
     }
 }
 
@@ -228,6 +258,7 @@ private struct RoutineRowView: View {
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
+        .animation(.smooth(duration: 0.28), value: routine.completionStatus)
     }
 
     private var statusColor: Color {

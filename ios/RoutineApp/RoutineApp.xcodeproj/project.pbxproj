@@ -24,6 +24,9 @@
 		AA000000000000000000000F /* DashboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000010F /* DashboardModels.swift */; };
 		AA0000000000000000000010 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* DashboardViewModel.swift */; };
 		AA0000000000000000000011 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000111 /* DashboardView.swift */; };
+		AA0000000000000000000012 /* ThemeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000114 /* ThemeModels.swift */; };
+		AA0000000000000000000013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000115 /* SettingsView.swift */; };
+		AA0000000000000000000014 /* BadgeCelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000116 /* BadgeCelebrationView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +50,9 @@
 		AA0000000000000000000111 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/DashboardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000112 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ../Config/Base.xcconfig; sourceTree = "<group>"; };
 		AA0000000000000000000113 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000114 /* ThemeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ThemeModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000115 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000116 /* BadgeCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/BadgeCelebrationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +84,8 @@
 				AA0000000000000000000105 /* TemplatesView.swift */,
 				AA0000000000000000000106 /* RoutinesView.swift */,
 				AA0000000000000000000111 /* DashboardView.swift */,
+				AA0000000000000000000115 /* SettingsView.swift */,
+				AA0000000000000000000116 /* BadgeCelebrationView.swift */,
 				AA0000000000000000000113 /* Info.plist */,
 				AA0000000000000000000107 /* APIClient.swift */,
 				AA0000000000000000000108 /* TodayViewModel.swift */,
@@ -89,6 +97,7 @@
 				AA000000000000000000010D /* InsightModels.swift */,
 				AA000000000000000000010E /* TemplateModels.swift */,
 				AA000000000000000000010F /* DashboardModels.swift */,
+				AA0000000000000000000114 /* ThemeModels.swift */,
 				AA0000000000000000000112 /* Base.xcconfig */,
 			);
 			path = RoutineApp;
@@ -166,6 +175,8 @@
 				AA0000000000000000000005 /* TemplatesView.swift in Sources */,
 				AA0000000000000000000006 /* RoutinesView.swift in Sources */,
 				AA0000000000000000000011 /* DashboardView.swift in Sources */,
+				AA0000000000000000000013 /* SettingsView.swift in Sources */,
+				AA0000000000000000000014 /* BadgeCelebrationView.swift in Sources */,
 				AA0000000000000000000007 /* APIClient.swift in Sources */,
 				AA0000000000000000000008 /* TodayViewModel.swift in Sources */,
 				AA0000000000000000000009 /* InsightsViewModel.swift in Sources */,
@@ -176,6 +187,7 @@
 				AA000000000000000000000D /* InsightModels.swift in Sources */,
 				AA000000000000000000000E /* TemplateModels.swift in Sources */,
 				AA000000000000000000000F /* DashboardModels.swift in Sources */,
+				AA0000000000000000000012 /* ThemeModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

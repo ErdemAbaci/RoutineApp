@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
+    @State private var animateContent = false
 
     var body: some View {
         NavigationStack {
@@ -12,14 +13,20 @@ struct DashboardView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 18) {
                             DashboardHero(dashboard: dashboard)
+                                .opacity(animateContent ? 1 : 0.72)
+                                .offset(y: animateContent ? 0 : 10)
 
                             HStack(spacing: 12) {
                                 MetricTile(title: "Aktif", value: "\(dashboard.activeRoutineCount)", systemImage: "list.bullet.clipboard")
                                 MetricTile(title: "Streak", value: "\(dashboard.currentStreak)", systemImage: "flame.fill")
                                 MetricTile(title: "Freeze", value: "\(dashboard.freezeBalance)", systemImage: "snowflake")
                             }
+                            .opacity(animateContent ? 1 : 0)
+                            .offset(y: animateContent ? 0 : 16)
 
                             BadgeDistribution(counts: dashboard.badgeCounts)
+                                .opacity(animateContent ? 1 : 0)
+                                .offset(y: animateContent ? 0 : 20)
 
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("Haftalık Akış")
@@ -32,8 +39,11 @@ struct DashboardView: View {
                                         description: Text("Günler finalize edildikçe haftalık görünüm burada oluşacak.")
                                     )
                                 } else {
-                                    ForEach(Array(dashboard.weeklySummaries.enumerated()), id: \.offset) { _, summary in
+                                    ForEach(Array(dashboard.weeklySummaries.enumerated()), id: \.offset) { index, summary in
                                         WeeklySummaryRow(summary: summary)
+                                            .opacity(animateContent ? 1 : 0)
+                                            .offset(y: animateContent ? 0 : 22)
+                                            .animation(.smooth(duration: 0.42).delay(Double(index) * 0.04), value: animateContent)
                                     }
                                 }
                             }
@@ -59,6 +69,14 @@ struct DashboardView: View {
             }
             .task {
                 await viewModel.loadDashboard()
+                withAnimation(.smooth(duration: 0.45)) {
+                    animateContent = true
+                }
+            }
+            .onChange(of: viewModel.dashboard?.latestFinalizedDate) { _, _ in
+                withAnimation(.smooth(duration: 0.45)) {
+                    animateContent = true
+                }
             }
             .alert("Hata", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
@@ -85,6 +103,7 @@ private struct DashboardHero: View {
                     Text("%\(dashboard.totals.averagePointCompletionRate)")
                         .font(.system(size: 48, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
+                        .contentTransition(.numericText())
                     Text("ortalama puan tamamlama")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.82))
@@ -109,6 +128,7 @@ private struct DashboardHero: View {
             Text("\(dashboard.totals.earnedPoints)/\(dashboard.totals.totalPoints) puan")
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.9))
+                .contentTransition(.numericText())
         }
         .padding(20)
         .background(
@@ -145,6 +165,7 @@ private struct MetricTile: View {
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 6)
+        .contentTransition(.numericText())
     }
 }
 
