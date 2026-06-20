@@ -26,6 +26,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
             - dynamodb:ConditionCheckItem
             - dynamodb:TransactWriteItems
           Resource:
