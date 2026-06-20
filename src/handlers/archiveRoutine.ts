@@ -42,7 +42,7 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
 
     const updatedAt = new Date().toISOString();
 
-    await routineRepository.archive(routineId, updatedAt);
+    await routineRepository.archiveAndReleaseDuplicateKey(existingRoutine, updatedAt);
 
     return json(200, {
       message: "Routine archived successfully",

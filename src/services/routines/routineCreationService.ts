@@ -17,7 +17,14 @@ export type ApplyRoutineTemplateResult = {
   }[];
 };
 
-function getRoutineSignature(input: CreateRoutineInput): string {
+export class DuplicateRoutineError extends Error {
+  constructor() {
+    super("Routine already exists");
+    this.name = "DuplicateRoutineError";
+  }
+}
+
+export function getRoutineSignature(input: CreateRoutineInput): string {
   return [
     input.title.trim().toLocaleLowerCase("tr"),
     input.category,
@@ -25,6 +32,10 @@ function getRoutineSignature(input: CreateRoutineInput): string {
     input.scheduledTime,
     [...(input.daysOfWeek ?? [])].sort().join(","),
   ].join("|");
+}
+
+function getRoutineDuplicateKey(ownerId: string, input: CreateRoutineInput): string {
+  return `routine_duplicate#${ownerId}#${encodeURIComponent(getRoutineSignature(input))}`;
 }
 
 async function resolveStartDate(
@@ -50,9 +61,29 @@ export async function createRoutineFromInput(params: {
   ownerId: string;
   input: CreateRoutineInput;
   nowDate?: Date;
+  skipExistingDuplicateCheck?: boolean;
 }): Promise<Routine> {
-  const { ownerId, input, nowDate = new Date() } = params;
+  const {
+    ownerId,
+    input,
+    nowDate = new Date(),
+    skipExistingDuplicateCheck = false,
+  } = params;
   const now = nowDate.toISOString();
+  const signature = getRoutineSignature(input);
+  const duplicateKey = getRoutineDuplicateKey(ownerId, input);
+
+  if (!skipExistingDuplicateCheck) {
+    const existingRoutines = await routineRepository.listByOwner(ownerId);
+    const hasActiveDuplicate = existingRoutines
+      .filter((routine) => routine.status === "active")
+      .some((routine) => getRoutineSignature(routine) === signature);
+
+    if (hasActiveDuplicate) {
+      throw new DuplicateRoutineError();
+    }
+  }
+
   const startDate = await resolveStartDate(
     ownerId,
     input.scheduledTime,
@@ -69,13 +100,22 @@ export async function createRoutineFromInput(params: {
     daysOfWeek: input.daysOfWeek,
     scheduledTime: input.scheduledTime,
     startDate,
+    duplicateKey,
     reminderEnabled: input.reminderEnabled,
     status: "active",
     createdAt: now,
     updatedAt: now,
   };
 
-  await routineRepository.create(routine);
+  try {
+    await routineRepository.createUnique(routine);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Routine already exists") {
+      throw new DuplicateRoutineError();
+    }
+
+    throw error;
+  }
 
   return routine;
 }
@@ -110,7 +150,23 @@ export async function createMissingTemplateRoutines(params: {
       ownerId,
       input: item,
       nowDate,
+      skipExistingDuplicateCheck: true,
+    }).catch((error) => {
+      if (error instanceof DuplicateRoutineError) {
+        return null;
+      }
+
+      throw error;
     });
+
+    if (!routine) {
+      skipped.push({
+        title: item.title,
+        reason: "duplicate",
+      });
+      existingSignatures.add(signature);
+      continue;
+    }
 
     existingSignatures.add(signature);
     created.push(routine);

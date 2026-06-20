@@ -41,7 +41,7 @@ test("template apply skips duplicate active routines", async () => {
     createMissingTemplateRoutines,
   } = require("../.build/services/routines/routineCreationService.js");
   const originalListByOwner = routineRepository.listByOwner;
-  const originalCreate = routineRepository.create;
+  const originalCreateUnique = routineRepository.createUnique;
   const originalGetSummary = summaryRepository.getByOwnerAndDate;
   const created = [];
 
@@ -59,7 +59,7 @@ test("template apply skips duplicate active routines", async () => {
       updatedAt: "2026-05-10T09:00:00.000Z",
     },
   ];
-  routineRepository.create = async (routine) => {
+  routineRepository.createUnique = async (routine) => {
     created.push(routine);
   };
   summaryRepository.getByOwnerAndDate = async () => null;
@@ -92,7 +92,145 @@ test("template apply skips duplicate active routines", async () => {
     assert.equal(created[0].title, "Vitamin al");
   } finally {
     routineRepository.listByOwner = originalListByOwner;
-    routineRepository.create = originalCreate;
+    routineRepository.createUnique = originalCreateUnique;
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+  }
+});
+
+test("manual routine create reports duplicate active routines", async () => {
+  const {
+    handler,
+  } = require("../.build/handlers/createRoutine.js");
+  const {
+    routineRepository,
+  } = require("../.build/repositories/routineRepository.js");
+  const {
+    summaryRepository,
+  } = require("../.build/repositories/summaryRepository.js");
+  const originalCreateUnique = routineRepository.createUnique;
+  const originalListByOwner = routineRepository.listByOwner;
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+
+  routineRepository.listByOwner = async () => [
+    {
+      id: "routine-water",
+      ownerId: "temporary-user-id",
+      title: "Su iç",
+      category: "water",
+      frequencyType: "daily",
+      scheduledTime: "08:00",
+      reminderEnabled: true,
+      status: "active",
+      createdAt: "2026-05-10T09:00:00.000Z",
+      updatedAt: "2026-05-10T09:00:00.000Z",
+    },
+  ];
+  routineRepository.createUnique = async () => {
+    throw new Error("createUnique should not be called for prechecked duplicates");
+  };
+  summaryRepository.getByOwnerAndDate = async () => null;
+
+  try {
+    const response = await handler({
+      body: JSON.stringify({
+        title: "Su iç",
+        category: "water",
+        frequencyType: "daily",
+        scheduledTime: "08:00",
+        reminderEnabled: true,
+      }),
+    });
+
+    assert.equal(response.statusCode, 409);
+    assert.equal(JSON.parse(response.body).message, "Routine already exists");
+  } finally {
+    routineRepository.createUnique = originalCreateUnique;
+    routineRepository.listByOwner = originalListByOwner;
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+  }
+});
+
+test("manual routine create reports duplicates caught by conditional writes", async () => {
+  const {
+    handler,
+  } = require("../.build/handlers/createRoutine.js");
+  const {
+    routineRepository,
+  } = require("../.build/repositories/routineRepository.js");
+  const {
+    summaryRepository,
+  } = require("../.build/repositories/summaryRepository.js");
+  const originalCreateUnique = routineRepository.createUnique;
+  const originalListByOwner = routineRepository.listByOwner;
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+
+  routineRepository.listByOwner = async () => [];
+  routineRepository.createUnique = async () => {
+    throw new Error("Routine already exists");
+  };
+  summaryRepository.getByOwnerAndDate = async () => null;
+
+  try {
+    const response = await handler({
+      body: JSON.stringify({
+        title: "Su iç",
+        category: "water",
+        frequencyType: "daily",
+        scheduledTime: "08:00",
+        reminderEnabled: true,
+      }),
+    });
+
+    assert.equal(response.statusCode, 409);
+    assert.equal(JSON.parse(response.body).message, "Routine already exists");
+  } finally {
+    routineRepository.createUnique = originalCreateUnique;
+    routineRepository.listByOwner = originalListByOwner;
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+  }
+});
+
+test("template apply skips duplicates caught by conditional writes", async () => {
+  const {
+    routineRepository,
+  } = require("../.build/repositories/routineRepository.js");
+  const {
+    summaryRepository,
+  } = require("../.build/repositories/summaryRepository.js");
+  const {
+    createMissingTemplateRoutines,
+  } = require("../.build/services/routines/routineCreationService.js");
+  const originalListByOwner = routineRepository.listByOwner;
+  const originalCreateUnique = routineRepository.createUnique;
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+
+  routineRepository.listByOwner = async () => [];
+  routineRepository.createUnique = async () => {
+    throw new Error("Routine already exists");
+  };
+  summaryRepository.getByOwnerAndDate = async () => null;
+
+  try {
+    const result = await createMissingTemplateRoutines({
+      ownerId: "temporary-user-id",
+      nowDate: new Date("2026-05-11T04:00:00.000Z"),
+      items: [
+        {
+          title: "Su iç",
+          category: "water",
+          frequencyType: "daily",
+          scheduledTime: "08:00",
+          reminderEnabled: true,
+        },
+      ],
+    });
+
+    assert.equal(result.created.length, 0);
+    assert.equal(result.skipped.length, 1);
+    assert.equal(result.skipped[0].reason, "duplicate");
+  } finally {
+    routineRepository.listByOwner = originalListByOwner;
+    routineRepository.createUnique = originalCreateUnique;
     summaryRepository.getByOwnerAndDate = originalGetSummary;
   }
 });

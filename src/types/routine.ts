@@ -22,6 +22,7 @@ export type Routine = {
   daysOfWeek?: number[];
   scheduledTime: string;
   startDate?: string;
+  duplicateKey?: string;
   reminderEnabled: boolean;
   status: RoutineStatus;
   createdAt: string;

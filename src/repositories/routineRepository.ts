@@ -1,5 +1,12 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  TransactWriteCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
 import type { Routine } from "../types/routine";
 
 const dynamoDbClient = new DynamoDBClient({});
@@ -23,6 +30,49 @@ export const routineRepository = {
         Item: routine,
       }),
     );
+  },
+
+  async createUnique(routine: Routine): Promise<void> {
+    if (!routine.duplicateKey) {
+      throw new Error("Routine duplicate key is required");
+    }
+
+    try {
+      await dynamoDb.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Put: {
+                TableName: getTableName(),
+                Item: {
+                  id: routine.duplicateKey,
+                  type: "routine_duplicate_marker",
+                  routineId: routine.id,
+                  createdAt: routine.createdAt,
+                },
+                ConditionExpression: "attribute_not_exists(id)",
+              },
+            },
+            {
+              Put: {
+                TableName: getTableName(),
+                Item: routine,
+                ConditionExpression: "attribute_not_exists(id)",
+              },
+            },
+          ],
+        }),
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "TransactionCanceledException"
+      ) {
+        throw new Error("Routine already exists");
+      }
+
+      throw error;
+    }
   },
 
   async listByOwner(ownerId: string): Promise<Routine[]> {
@@ -107,6 +157,49 @@ export const routineRepository = {
       }),
     );
   },
+
+  async archiveAndReleaseDuplicateKey(
+    routine: Routine,
+    updatedAt: string,
+  ): Promise<void> {
+    if (!routine.duplicateKey) {
+      await this.archive(routine.id, updatedAt);
+      return;
+    }
+
+    await dynamoDb.send(
+      new TransactWriteCommand({
+        TransactItems: [
+          {
+            Update: {
+              TableName: getTableName(),
+              Key: {
+                id: routine.id,
+              },
+              UpdateExpression: `
+                SET
+                  #status = :status,
+                  updatedAt = :updatedAt
+              `,
+              ExpressionAttributeNames: {
+                "#status": "status",
+              },
+              ExpressionAttributeValues: {
+                ":status": "archived",
+                ":updatedAt": updatedAt,
+              },
+            },
+          },
+          {
+            Delete: {
+              TableName: getTableName(),
+              Key: {
+                id: routine.duplicateKey,
+              },
+            },
+          },
+        ],
+      }),
+    );
+  },
 };
-
-

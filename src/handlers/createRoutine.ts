@@ -1,5 +1,8 @@
 import { validateCreateRoutineBody } from "../services/routines/routineValidation";
-import { createRoutineFromInput } from "../services/routines/routineCreationService";
+import {
+  createRoutineFromInput,
+  DuplicateRoutineError,
+} from "../services/routines/routineCreationService";
 
 type ApiEvent = {
   body?: string | null;
@@ -48,6 +51,10 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
 
     return json(201, routine);
   } catch (error) {
+    if (error instanceof DuplicateRoutineError) {
+      return json(409, { message: "Routine already exists" });
+    }
+
     console.error("Failed to create routine", error);
     return json(500, { message: "Could not create routine" });
   }
