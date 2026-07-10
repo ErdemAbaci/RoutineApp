@@ -1,4 +1,8 @@
-import type { RoutineCategory, RoutineFrequencyType } from "../../types/routine";
+import type {
+  RoutineCategory,
+  RoutineFrequencyType,
+  RoutinePriority,
+} from "../../types/routine";
 
 export type CreateRoutineInput = {
   title: string;
@@ -7,6 +11,7 @@ export type CreateRoutineInput = {
   frequencyType: RoutineFrequencyType;
   daysOfWeek?: number[];
   scheduledTime: string;
+  priority?: RoutinePriority;
   reminderEnabled: boolean;
 };
 
@@ -30,6 +35,8 @@ const allowedFrequencyTypes: RoutineFrequencyType[] = [
   "weekly",
   "selected_days",
 ];
+
+const allowedPriorities: RoutinePriority[] = ["high", "normal", "low"];
 
 function isValidTime(value: string) {
   return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
@@ -68,6 +75,14 @@ export function validateCreateRoutineBody(body: unknown): ValidationResult {
     return { ok: false, message: "reminderEnabled must be a boolean" };
   }
 
+  if (
+    payload.priority !== undefined &&
+    (typeof payload.priority !== "string" ||
+      !allowedPriorities.includes(payload.priority as RoutinePriority))
+  ) {
+    return { ok: false, message: "priority is invalid" };
+  }
+
   if (payload.description !== undefined && typeof payload.description !== "string") {
     return { ok: false, message: "description must be a string" };
   }
@@ -100,6 +115,7 @@ export function validateCreateRoutineBody(body: unknown): ValidationResult {
       frequencyType: payload.frequencyType as RoutineFrequencyType,
       daysOfWeek: payload.daysOfWeek as number[] | undefined,
       scheduledTime: payload.scheduledTime,
+      priority: (payload.priority as RoutinePriority | undefined) ?? "normal",
       reminderEnabled: payload.reminderEnabled,
     },
   };

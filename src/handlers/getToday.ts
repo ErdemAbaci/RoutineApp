@@ -2,8 +2,9 @@ import { routineRepository } from "../repositories/routineRepository";
 import { completionRepository } from "../repositories/completionRepository";
 import { gamificationStateRepository } from "../repositories/gamificationStateRepository";
 import { getRoutinesActiveOnDate } from "../services/schedule/scheduleService";
+import { sortRoutinesByPriorityAndTime } from "../services/routines/routinePriorityService";
 import { toTodayRoutineResponse } from "../mappers/todayResponseMapper";
-import { calculateAndSaveDailySummary } from "../services/summaries/summaryService";
+import { calculateDailySummary } from "../services/summaries/summaryService";
 import { formatDateKey } from "../utils/date";
 
 type ApiResponse = {
@@ -29,7 +30,9 @@ export async function handler(): Promise<ApiResponse> {
 
   try {
     const routines = await routineRepository.listByOwner(ownerId);
-    const activeTodayRoutines = getRoutinesActiveOnDate(routines, today);
+    const activeTodayRoutines = sortRoutinesByPriorityAndTime(
+      getRoutinesActiveOnDate(routines, today),
+    );
 
     const completions = await completionRepository.listByOwnerAndDate(
       ownerId,
@@ -40,7 +43,7 @@ export async function handler(): Promise<ApiResponse> {
       completions.map((completion) => [completion.routineId, completion]),
     );
 
-    const summary = await calculateAndSaveDailySummary({
+    const summary = await calculateDailySummary({
       ownerId,
       date,
       activeRoutines: activeTodayRoutines,

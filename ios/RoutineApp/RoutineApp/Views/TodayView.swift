@@ -219,6 +219,12 @@ private struct RoutineRowView: View {
                     Text("\(routine.category.rawValue) • \(routine.points) puan • \(routine.scheduledTime)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    if routine.priority == .high {
+                        Label("Öncelikli", systemImage: "exclamationmark.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Spacer()

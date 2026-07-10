@@ -34,7 +34,10 @@ export function getRoutineSignature(input: CreateRoutineInput): string {
   ].join("|");
 }
 
-function getRoutineDuplicateKey(ownerId: string, input: CreateRoutineInput): string {
+export function getRoutineDuplicateKey(
+  ownerId: string,
+  input: CreateRoutineInput,
+): string {
   return `routine_duplicate#${ownerId}#${encodeURIComponent(getRoutineSignature(input))}`;
 }
 
@@ -101,6 +104,7 @@ export async function createRoutineFromInput(params: {
     scheduledTime: input.scheduledTime,
     startDate,
     duplicateKey,
+    priority: input.priority ?? "normal",
     reminderEnabled: input.reminderEnabled,
     status: "active",
     createdAt: now,

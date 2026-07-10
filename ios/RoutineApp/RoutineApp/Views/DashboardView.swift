@@ -28,8 +28,12 @@ struct DashboardView: View {
                                 .opacity(animateContent ? 1 : 0)
                                 .offset(y: animateContent ? 0 : 20)
 
+                            WeeklyProgressChart(summaries: dashboard.weeklySummaries)
+                                .opacity(animateContent ? 1 : 0)
+                                .offset(y: animateContent ? 0 : 20)
+
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Haftalık Akış")
+                                Text("Gün Gün Özet")
                                     .font(.headline)
 
                                 if dashboard.weeklySummaries.isEmpty {
@@ -59,7 +63,7 @@ struct DashboardView: View {
                     )
                 }
             }
-            .navigationTitle("Dashboard")
+            .navigationTitle("Haftalık Özet")
             .toolbar {
                 Button {
                     Task { await viewModel.loadDashboard() }
@@ -248,6 +252,59 @@ private struct WeeklySummaryRow: View {
             return .orange
         default:
             return .red
+        }
+    }
+}
+
+private struct WeeklyProgressChart: View {
+    let summaries: [TodaySummary]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Haftalık İlerleme")
+                .font(.headline)
+
+            if summaries.isEmpty {
+                Text("Finalize edilen günler burada sütun olarak görünür.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                HStack(alignment: .bottom, spacing: 10) {
+                    ForEach(Array(summaries.suffix(7).enumerated()), id: \.offset) { _, summary in
+                        VStack(spacing: 6) {
+                            Text("%\(summary.pointCompletionRate)")
+                                .font(.caption2.weight(.semibold))
+
+                            Capsule()
+                                .fill(barColor(summary.badge))
+                                .frame(height: max(CGFloat(summary.pointCompletionRate) * 0.76, 6))
+
+                            Text(dayLabel(summary.date))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .bottom)
+                    }
+                }
+                .frame(height: 126, alignment: .bottom)
+            }
+        }
+        .padding()
+        .background(.background)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func dayLabel(_ date: String?) -> String {
+        guard let date else { return "-" }
+        return String(date.suffix(2))
+    }
+
+    private func barColor(_ badge: String) -> Color {
+        switch badge {
+        case "gold": return .yellow
+        case "silver": return .gray
+        case "bronze": return .orange
+        default: return .red
         }
     }
 }

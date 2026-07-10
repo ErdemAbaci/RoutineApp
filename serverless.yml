@@ -74,6 +74,13 @@ functions:
           path: /routines/{id}
           method: get
 
+  getRoutineHistory:
+    handler: src/handlers/getRoutineHistory.handler
+    events:
+      - httpApi:
+          path: /routines/{id}/history
+          method: get
+
   updateRoutine:
     handler: src/handlers/updateRoutine.handler
     events:

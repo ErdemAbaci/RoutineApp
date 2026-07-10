@@ -26,6 +26,22 @@ enum RoutineStatus: String, Codable {
     case archived
 }
 
+enum RoutinePriority: String, Codable, CaseIterable, Identifiable {
+    case high
+    case normal
+    case low
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .high: return "Yüksek"
+        case .normal: return "Normal"
+        case .low: return "Düşük"
+        }
+    }
+}
+
 struct Routine: Identifiable, Codable {
     let id: String
     let ownerId: String
@@ -36,10 +52,13 @@ struct Routine: Identifiable, Codable {
     let daysOfWeek: [Int]?
     let scheduledTime: String
     let startDate: String?
+    let priority: RoutinePriority?
     let reminderEnabled: Bool
     let status: RoutineStatus
     let createdAt: String
     let updatedAt: String
+
+    var resolvedPriority: RoutinePriority { priority ?? .normal }
 }
 
 struct RoutineDraft: Codable {
@@ -49,6 +68,7 @@ struct RoutineDraft: Codable {
     var frequencyType: RoutineFrequencyType
     var daysOfWeek: [Int]?
     var scheduledTime: String
+    var priority: RoutinePriority
     var reminderEnabled: Bool
 
     init(
@@ -58,6 +78,7 @@ struct RoutineDraft: Codable {
         frequencyType: RoutineFrequencyType = .daily,
         daysOfWeek: [Int]? = nil,
         scheduledTime: String = "09:00",
+        priority: RoutinePriority = .normal,
         reminderEnabled: Bool = false
     ) {
         self.title = title
@@ -66,6 +87,7 @@ struct RoutineDraft: Codable {
         self.frequencyType = frequencyType
         self.daysOfWeek = daysOfWeek
         self.scheduledTime = scheduledTime
+        self.priority = priority
         self.reminderEnabled = reminderEnabled
     }
 
@@ -76,6 +98,7 @@ struct RoutineDraft: Codable {
         self.frequencyType = routine.frequencyType
         self.daysOfWeek = routine.daysOfWeek
         self.scheduledTime = routine.scheduledTime
+        self.priority = routine.resolvedPriority
         self.reminderEnabled = routine.reminderEnabled
     }
 
@@ -86,6 +109,7 @@ struct RoutineDraft: Codable {
         self.frequencyType = templateItem.frequencyType
         self.daysOfWeek = templateItem.daysOfWeek
         self.scheduledTime = templateItem.scheduledTime
+        self.priority = .normal
         self.reminderEnabled = templateItem.reminderEnabled
     }
 }
@@ -99,4 +123,11 @@ struct ArchiveRoutineResponse: Codable {
     let id: String
     let status: RoutineStatus
     let updatedAt: String
+}
+
+struct RoutineHistoryResponse: Codable {
+    let routineId: String
+    let title: String
+    let windowDays: Int
+    let items: [RoutineCompletion]
 }

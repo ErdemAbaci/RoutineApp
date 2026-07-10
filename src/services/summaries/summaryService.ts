@@ -238,6 +238,28 @@ export async function calculateAndSaveDailySummary(params: {
   });
 }
 
+export async function calculateDailySummary(params: {
+  ownerId: string;
+  date: string;
+  activeRoutines: Routine[];
+  completions: RoutineCompletion[];
+}): Promise<DailySummary> {
+  const existingSummary = await summaryRepository.getByOwnerAndDate(
+    params.ownerId,
+    params.date,
+  );
+
+  if (existingSummary?.finalized) {
+    return existingSummary;
+  }
+
+  return buildAndSaveDailySummary({
+    ...params,
+    persist: false,
+    finalized: false,
+  });
+}
+
 export async function finalizeDailySummary(params: {
   ownerId: string;
   date: string;

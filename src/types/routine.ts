@@ -12,6 +12,8 @@ export type RoutineFrequencyType = "daily" | "weekly" | "selected_days";
 
 export type RoutineStatus = "active" | "archived";
 
+export type RoutinePriority = "high" | "normal" | "low";
+
 export type Routine = {
   id: string;
   ownerId: string;
@@ -23,6 +25,7 @@ export type Routine = {
   scheduledTime: string;
   startDate?: string;
   duplicateKey?: string;
+  priority?: RoutinePriority;
   reminderEnabled: boolean;
   status: RoutineStatus;
   createdAt: string;

@@ -1,6 +1,7 @@
 import type { Routine } from "../types/routine";
 import type { RoutineCompletion } from "../types/completion";
 import { getRoutinePoints } from "../services/routines/routineScoring";
+import { getRoutinePriority } from "../services/routines/routinePriorityService";
 
 export type TodayRoutineCompletionStatus =
   | "pending"
@@ -15,6 +16,7 @@ export type TodayRoutineResponse = {
   points: number;
   scheduledTime: string;
   frequencyType: string;
+  priority: string;
   reminderEnabled: boolean;
   completionStatus: TodayRoutineCompletionStatus;
   completedAt: string | null;
@@ -31,6 +33,7 @@ export function toTodayRoutineResponse(
     points: getRoutinePoints(routine),
     scheduledTime: routine.scheduledTime,
     frequencyType: routine.frequencyType,
+    priority: getRoutinePriority(routine),
     reminderEnabled: routine.reminderEnabled,
     completionStatus: completion?.status ?? "pending",
     completedAt: completion?.completedAt ?? null,

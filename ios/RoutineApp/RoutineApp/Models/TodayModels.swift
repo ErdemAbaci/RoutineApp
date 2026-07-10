@@ -14,6 +14,7 @@ struct TodayRoutine: Identifiable, Codable {
     let points: Int
     let scheduledTime: String
     let frequencyType: RoutineFrequencyType
+    let priority: RoutinePriority
     let reminderEnabled: Bool
     let completionStatus: CompletionStatus
     let completedAt: String?

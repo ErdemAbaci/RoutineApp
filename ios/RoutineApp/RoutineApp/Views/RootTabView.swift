@@ -5,7 +5,7 @@ struct RootTabView: View {
         TabView {
             DashboardView()
                 .tabItem {
-                    Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis")
+                    Label("Hafta", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
             TodayView()

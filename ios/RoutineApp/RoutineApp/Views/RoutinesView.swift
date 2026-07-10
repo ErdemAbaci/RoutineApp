@@ -13,11 +13,15 @@ final class RoutinesViewModel: ObservableObject {
     }
 
     var activeRoutines: [Routine] {
-        routines.filter { $0.status == .active }
+        routines
+            .filter { $0.status == .active }
+            .sorted(by: isHigherPriority)
     }
 
     var archivedRoutines: [Routine] {
-        routines.filter { $0.status == .archived }
+        routines
+            .filter { $0.status == .archived }
+            .sorted { $0.scheduledTime < $1.scheduledTime }
     }
 
     func loadRoutines() async {
@@ -26,12 +30,23 @@ final class RoutinesViewModel: ObservableObject {
 
         do {
             let response: RoutineListResponse = try await apiClient.get("routines")
-            routines = response.items.sorted { $0.scheduledTime < $1.scheduledTime }
+            routines = response.items
         } catch {
             errorMessage = error.localizedDescription
         }
 
         isLoading = false
+    }
+
+    private func isHigherPriority(_ left: Routine, _ right: Routine) -> Bool {
+        let rank: [RoutinePriority: Int] = [.high: 0, .normal: 1, .low: 2]
+        let priorityDifference = (rank[left.resolvedPriority] ?? 1) - (rank[right.resolvedPriority] ?? 1)
+
+        if priorityDifference != 0 {
+            return priorityDifference < 0
+        }
+
+        return left.scheduledTime < right.scheduledTime
     }
 
     func createRoutine(_ draft: RoutineDraft) async -> Bool {
@@ -135,6 +150,7 @@ struct RoutinesView: View {
             .sheet(isPresented: $isShowingEditor) {
                 RoutineEditorView(
                     title: editingRoutine == nil ? "Yeni Rutin" : "Rutini Düzenle",
+                    routine: editingRoutine,
                     draft: $draft,
                     onCancel: {
                         isShowingEditor = false
@@ -200,6 +216,10 @@ private struct RoutineListRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+            Label(routine.resolvedPriority.displayName, systemImage: priorityIcon)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(priorityColor)
+
             if let description = routine.description, !description.isEmpty {
                 Text(description)
                     .font(.caption)
@@ -208,10 +228,27 @@ private struct RoutineListRow: View {
         }
         .padding(.vertical, 4)
     }
+
+    private var priorityIcon: String {
+        switch routine.resolvedPriority {
+        case .high: return "exclamationmark.circle.fill"
+        case .normal: return "equal.circle.fill"
+        case .low: return "arrow.down.circle.fill"
+        }
+    }
+
+    private var priorityColor: Color {
+        switch routine.resolvedPriority {
+        case .high: return .red
+        case .normal: return .blue
+        case .low: return .secondary
+        }
+    }
 }
 
 private struct RoutineEditorView: View {
     let title: String
+    let routine: Routine?
     @Binding var draft: RoutineDraft
     let onCancel: () -> Void
     let onSave: () -> Void
@@ -266,6 +303,24 @@ private struct RoutineEditorView: View {
 
                     Toggle("Hatırlatıcı", isOn: $draft.reminderEnabled)
                 }
+
+                Section("Öncelik") {
+                    Picker("Öncelik", selection: $draft.priority) {
+                        ForEach(RoutinePriority.allCases) { priority in
+                            Text(priority.displayName).tag(priority)
+                        }
+                    }
+                }
+
+                if let routine {
+                    Section("Geçmiş") {
+                        NavigationLink {
+                            RoutineHistoryView(routine: routine)
+                        } label: {
+                            Label("Son 30 günü görüntüle", systemImage: "chart.xyaxis.line")
+                        }
+                    }
+                }
             }
             .navigationTitle(title)
             .toolbar {
@@ -305,5 +360,107 @@ private struct RoutineEditorView: View {
                 draft.daysOfWeek = days.sorted()
             }
         )
+    }
+}
+
+@MainActor
+private final class RoutineHistoryViewModel: ObservableObject {
+    @Published var history: RoutineHistoryResponse?
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+
+    func loadHistory(for routine: Routine) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            history = try await APIClient.shared.get("routines/\(routine.id)/history")
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+}
+
+private struct RoutineHistoryView: View {
+    let routine: Routine
+    @StateObject private var viewModel = RoutineHistoryViewModel()
+
+    var body: some View {
+        Group {
+            if viewModel.isLoading && viewModel.history == nil {
+                ProgressView("Geçmiş yükleniyor")
+            } else if let history = viewModel.history {
+                List {
+                    Section("Son \(history.windowDays) gün") {
+                        if history.items.isEmpty {
+                            ContentUnavailableView(
+                                "Henüz kayıt yok",
+                                systemImage: "calendar.badge.clock",
+                                description: Text("Bu rutin tamamlandıkça veya atlandıkça geçmişi burada görünür.")
+                            )
+                        } else {
+                            ForEach(history.items, id: \.id) { completion in
+                                HStack {
+                                    Image(systemName: statusIcon(completion.status))
+                                        .foregroundStyle(statusColor(completion.status))
+                                    Text(completion.date)
+                                    Spacer()
+                                    Text(statusTitle(completion.status))
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(statusColor(completion.status))
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                ContentUnavailableView(
+                    "Geçmiş yüklenemedi",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(viewModel.errorMessage ?? "Tekrar deneyebilirsin.")
+                )
+            }
+        }
+        .navigationTitle("Rutin Geçmişi")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await viewModel.loadHistory(for: routine)
+        }
+        .toolbar {
+            Button {
+                Task { await viewModel.loadHistory(for: routine) }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+        }
+    }
+
+    private func statusTitle(_ status: CompletionStatus) -> String {
+        switch status {
+        case .done: return "Tamamlandı"
+        case .skipped: return "Atlandı"
+        case .missed: return "Kaçırıldı"
+        case .pending: return "Bekliyor"
+        }
+    }
+
+    private func statusIcon(_ status: CompletionStatus) -> String {
+        switch status {
+        case .done: return "checkmark.circle.fill"
+        case .skipped: return "forward.circle.fill"
+        case .missed: return "xmark.circle.fill"
+        case .pending: return "circle"
+        }
+    }
+
+    private func statusColor(_ status: CompletionStatus) -> Color {
+        switch status {
+        case .done: return .green
+        case .skipped: return .orange
+        case .missed: return .red
+        case .pending: return .secondary
+        }
     }
 }

@@ -5,6 +5,7 @@ import {
   PutCommand,
   QueryCommand,
   TransactWriteCommand,
+  type TransactWriteCommandInput,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { Routine } from "../types/routine";
@@ -118,6 +119,7 @@ export const routineRepository = {
             frequencyType = :frequencyType,
             daysOfWeek = :daysOfWeek,
             scheduledTime = :scheduledTime,
+            priority = :priority,
             reminderEnabled = :reminderEnabled,
             updatedAt = :updatedAt
         `,
@@ -128,11 +130,97 @@ export const routineRepository = {
           ":frequencyType": routine.frequencyType,
           ":daysOfWeek": routine.daysOfWeek ?? [],
           ":scheduledTime": routine.scheduledTime,
+          ":priority": routine.priority ?? "normal",
           ":reminderEnabled": routine.reminderEnabled,
           ":updatedAt": routine.updatedAt,
         },
       }),
     );
+  },
+
+  async updateUnique(existingRoutine: Routine, updatedRoutine: Routine): Promise<void> {
+    if (!updatedRoutine.duplicateKey) {
+      throw new Error("Routine duplicate key is required");
+    }
+
+    if (existingRoutine.duplicateKey === updatedRoutine.duplicateKey) {
+      await this.update(updatedRoutine);
+      return;
+    }
+
+    try {
+      const transactionItems: NonNullable<
+        TransactWriteCommandInput["TransactItems"]
+      > = [
+        {
+          Put: {
+            TableName: getTableName(),
+            Item: {
+              id: updatedRoutine.duplicateKey,
+              type: "routine_duplicate_marker",
+              routineId: updatedRoutine.id,
+              createdAt: updatedRoutine.createdAt,
+            },
+            ConditionExpression: "attribute_not_exists(id)",
+          },
+        },
+        {
+          Update: {
+            TableName: getTableName(),
+            Key: { id: updatedRoutine.id },
+            UpdateExpression: `
+              SET
+                title = :title,
+                category = :category,
+                description = :description,
+                frequencyType = :frequencyType,
+                daysOfWeek = :daysOfWeek,
+                scheduledTime = :scheduledTime,
+                priority = :priority,
+                duplicateKey = :duplicateKey,
+                reminderEnabled = :reminderEnabled,
+                updatedAt = :updatedAt
+            `,
+            ExpressionAttributeValues: {
+              ":title": updatedRoutine.title,
+              ":category": updatedRoutine.category,
+              ":description": updatedRoutine.description ?? null,
+              ":frequencyType": updatedRoutine.frequencyType,
+              ":daysOfWeek": updatedRoutine.daysOfWeek ?? [],
+              ":scheduledTime": updatedRoutine.scheduledTime,
+              ":priority": updatedRoutine.priority ?? "normal",
+              ":duplicateKey": updatedRoutine.duplicateKey,
+              ":reminderEnabled": updatedRoutine.reminderEnabled,
+              ":updatedAt": updatedRoutine.updatedAt,
+            },
+          },
+        },
+      ];
+
+      if (existingRoutine.duplicateKey) {
+        transactionItems.push({
+          Delete: {
+            TableName: getTableName(),
+            Key: { id: existingRoutine.duplicateKey },
+          },
+        });
+      }
+
+      await dynamoDb.send(
+        new TransactWriteCommand({
+          TransactItems: transactionItems,
+        }),
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "TransactionCanceledException"
+      ) {
+        throw new Error("Routine already exists");
+      }
+
+      throw error;
+    }
   },
 
   async archive(id: string, updatedAt: string): Promise<void> {
