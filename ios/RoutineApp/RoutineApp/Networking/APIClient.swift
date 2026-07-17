@@ -2,6 +2,7 @@ import Foundation
 
 enum APIError: LocalizedError {
     case invalidBaseURL
+    case missingDevAccessToken
     case invalidResponse
     case serverMessage(String)
 
@@ -9,6 +10,8 @@ enum APIError: LocalizedError {
         switch self {
         case .invalidBaseURL:
             return "Backend URL ayarlanmadı."
+        case .missingDevAccessToken:
+            return "Yerel API erişim anahtarı ayarlanmadı."
         case .invalidResponse:
             return "Sunucudan beklenmeyen cevap geldi."
         case .serverMessage(let message):
@@ -25,6 +28,7 @@ final class APIClient {
     static let shared = APIClient()
 
     private let baseURL = URL(string: Bundle.main.object(forInfoDictionaryKey: "APIBaseURL") as? String ?? "")
+    private let devApiToken = Bundle.main.object(forInfoDictionaryKey: "DevAPIToken") as? String ?? ""
     private let decoder = JSONDecoder()
 
     private init() {}
@@ -53,6 +57,10 @@ final class APIClient {
         if baseURL?.host == "YOUR_API_ID.execute-api.eu-central-1.amazonaws.com" {
             throw APIError.invalidBaseURL
         }
+
+        if devApiToken.isEmpty || devApiToken == "LOCAL_DEV_TOKEN_NOT_CONFIGURED" {
+            throw APIError.missingDevAccessToken
+        }
     }
 
     private func request<T: Decodable, Body: Encodable>(
@@ -68,6 +76,7 @@ final class APIClient {
         var request = URLRequest(url: baseURL.appendingPathComponent(normalizedPath))
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(devApiToken, forHTTPHeaderField: "X-Routine-Dev-Key")
 
         if let body {
             request.httpBody = try JSONEncoder().encode(body)

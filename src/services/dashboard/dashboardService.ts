@@ -51,11 +51,13 @@ export async function getDashboard(ownerId: string): Promise<DashboardResponse> 
   const windowDays = 7;
   const [routines, summaries, gamificationState] = await Promise.all([
     routineRepository.listByOwner(ownerId),
-    summaryRepository.listByOwner(ownerId, windowDays),
+    summaryRepository.listByOwner(ownerId, windowDays * 2),
     gamificationStateRepository.getByOwner(ownerId),
   ]);
-  const chronologicalSummaries = [...summaries].reverse();
-  const finalizedSummaries = summaries.filter((summary) => summary.finalized);
+  const finalizedSummaries = summaries
+    .filter((summary) => summary.finalized)
+    .slice(0, windowDays);
+  const chronologicalSummaries = [...finalizedSummaries].reverse();
   const latestFinalizedSummary = finalizedSummaries[0] ?? null;
   const badgeCounts = getEmptyBadgeCounts();
 

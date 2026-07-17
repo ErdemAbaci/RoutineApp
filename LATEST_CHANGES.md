@@ -62,19 +62,19 @@ Eski kayitlarda alan bulunmuyorsa `normal` kabul edilir. iOS routine editor
 ekraninda oncelik secilebilir. Today ve aktif routine listesinde yuksek
 oncelikli kayitlar once, ayni oncelikte olanlar saatlerine gore siralanir.
 
-### 5. GET Today Artik Yazma Yapmiyor
+### 5. Gunluk Plan Snapshot'i
 
-`GET /today` daha once acik gunun ozetini hesaplarken DynamoDB'ye de
-yazabiliyordu. Artik ozet sadece bellekte hesaplanir ve response olarak
-donulur.
+`GET /today`, gunun rutinlerini ilk okumada tek seferlik bir plan olarak
+saklar. Plan rutin basligi, saati ve puanini o gun icin sabitler.
 
-Kalici DailySummary kaydi finalize akiminda olusturulur. Boylece bir okuma
-endpointi veri degistirmez ve gereksiz DynamoDB write maliyeti azalir.
+Gun icinde routine update veya archive edilse bile gece finalize islemi bu
+snapshot'i kullanir. Boylece toplam puan ve badge sonradan degismez. Ayni gun
+icin yeni olusturulan uygun rutinler acik plana kontrollu olarak eklenir.
 
 ## Dogrulama Sonuclari
 
 - TypeScript build basarili.
-- Backend testleri 24/24 basarili.
+- Backend testleri 28/28 basarili.
 - Serverless package islemi basarili.
 - iOS Simulator hedefi icin Xcode build basarili.
 - `git diff --check` temiz.
@@ -85,7 +85,9 @@ Yeni testler su davranislari kapsar:
 - DynamoDB kosullu yazma cakismasinin 409'a cevrilmesi
 - Priority siralamasi
 - Routine history'nin sadece secilen routine kayitlarini donmesi
-- Today summary hesaplamasinin kalici write yapmamasi
+- Daily plan snapshot'inin archive/edit sonrasi puani korumasi
+- Weekly routine icin tam bir gun secilmesi
+- Dev request authorizer'in anahtar ve IP'yi birlikte dogrulamasi
 
 ## Kontrol Sonucu ve Alarm Seviyeleri
 
@@ -94,16 +96,15 @@ Yeni testler su davranislari kapsar:
 #### Auth ve Owner Ayrimi
 
 API halen `temporary-user-id` kullanir. Bu gelistirme karari bilincli olarak
-korundu. Ancak gercek kullaniciya acik bir surumde API URL'sini bilen herkes
-ayni kullanici verisine erisebilir veya veriyi degistirebilir. Auth eklenene
-kadar sistem sadece dev/demo ortami olarak kabul edilmelidir.
+korundu. Dev endpointleri yerel anahtar ve izin verilen dis IP ile korunur,
+ancak gercek kullaniciya acik surumde Cognito benzeri kullanici kimligi ve
+owner ayrimi yine zorunludur.
 
 #### Manual Finalize Endpoint
 
-`POST /summaries/{date}/finalize` endpointi API uzerinden cagrilabilir. Auth
-olmadigi icin disaridan erken finalize tetiklenebilir. Mobil uygulamada buton
-bulunmamasi tek basina backend endpointini korumaz. Canli surumde endpoint
-admin/dev yetkisine alinmali veya kaldirilmalidir.
+`POST /summaries/{date}/finalize` endpointi de ayni dev authorizer arkasindadir.
+Anahtar ve izin verilen IP olmadan disaridan tetiklenemez. Production auth
+eklendiginde bu endpoint ayrica admin/dev yetkisine alinmalidir.
 
 ### Turuncu - Yakin Zamanda Iyilestirilmeli
 
@@ -148,7 +149,8 @@ eksik olan kisim yalnizca iOS navigasyonudur.
 - Eski priority alani olmayan routine kayitlari backend tarafinda `normal`
   kabul edilir.
 - Routine history uygulama acilisinda otomatik yuklenmez.
-- Today endpointi artik read-only davranir.
+- Gunluk puan plani update/archive islemlerinden etkilenmez.
+- Dashboard yalnizca finalize edilmis gunleri hesaplar.
 - Yeni backend kurallari otomatik testlerle korunur.
 
 ## Onerilen Sonraki Sira

@@ -2,6 +2,7 @@ import type { Routine } from "../types/routine";
 import type { RoutineCompletion } from "../types/completion";
 import { getRoutinePoints } from "../services/routines/routineScoring";
 import { getRoutinePriority } from "../services/routines/routinePriorityService";
+import type { DailyRoutineSnapshot } from "../types/dailySummary";
 
 export type TodayRoutineCompletionStatus =
   | "pending"
@@ -35,6 +36,24 @@ export function toTodayRoutineResponse(
     frequencyType: routine.frequencyType,
     priority: getRoutinePriority(routine),
     reminderEnabled: routine.reminderEnabled,
+    completionStatus: completion?.status ?? "pending",
+    completedAt: completion?.completedAt ?? null,
+  };
+}
+
+export function toTodayRoutineResponseFromSnapshot(
+  snapshot: DailyRoutineSnapshot,
+  completion?: RoutineCompletion,
+): TodayRoutineResponse {
+  return {
+    routineId: snapshot.routineId,
+    title: snapshot.title,
+    category: snapshot.category,
+    points: snapshot.points,
+    scheduledTime: snapshot.scheduledTime,
+    frequencyType: snapshot.frequencyType,
+    priority: snapshot.priority,
+    reminderEnabled: snapshot.reminderEnabled,
     completionStatus: completion?.status ?? "pending",
     completedAt: completion?.completedAt ?? null,
   };

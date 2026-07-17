@@ -38,7 +38,8 @@ streak, freeze ve puanlar uzerinden takip edebilir.
 - Streak freeze kazanma ve tuketme kurallari
 - Haftalik dashboard ve kural tabanli insights
 - Pull-based routine history endpointi
-- Read-only `GET /today` hesaplama akisi
+- Gun basinda rutin ve puanlari sabitleyen daily plan snapshot'i
+- Yerel dev anahtari, dis IP kontrolu ve API Gateway hiz siniri
 
 ## Mimari
 
@@ -96,7 +97,8 @@ yedi gunde yeterli gold performansi haftalik bir freeze kazandirabilir.
 
 ## Gunluk Akis
 
-1. `GET /today` bugune uygun aktif routine listesini ve anlik ozeti hesaplar.
+1. `GET /today` bugune uygun aktif routine listesini ilk okumada sabitler ve
+   anlik ozeti bu plan uzerinden hesaplar.
 2. Routine saati geldiginde complete islemi acilir; skip islemi gun acikken
    kullanilabilir.
 3. Complete ve skip yazmalari finalize ile cakismayi engelleyen DynamoDB
@@ -109,6 +111,10 @@ yedi gunde yeterli gold performansi haftalik bir freeze kazandirabilir.
 
 Yeni bir routine olusturulurken gun finalize edilmisse veya routine saati
 gecmisse baslangic tarihi sonraki gun olarak belirlenir.
+
+Gun icinde bir routine duzenlense veya arsivlense bile o gunun sabitlenmis
+puani ve badge hesabi degismez. Haftalik dashboard yalnizca finalize edilmis
+gunleri kullanir.
 
 ## API Ozeti
 
@@ -211,7 +217,14 @@ ios/RoutineApp/RoutineApp.xcodeproj
 ```
 
 Uygulama backend adresini Swift kaynak kodundan degil, yerel Xcode config
-dosyasindan okur. Su dosyayi yerel olarak olusturun:
+dosyasindan okur. Dev erisim anahtari ile mevcut dis IP'yi Git tarafindan yok
+sayilan yerel dosyalara yazmak icin once su komutu calistirin:
+
+```bash
+npm run setup:dev-access
+```
+
+Ardindan su dosyada API adresinin tanimli oldugunu kontrol edin:
 
 ```text
 ios/RoutineApp/Config/Local.xcconfig
@@ -223,8 +236,10 @@ Guvenli placeholder formati:
 API_BASE_URL = https:/$()/YOUR_DEPLOYED_API_HOST
 ```
 
-`Local.xcconfig` Git tarafindan yok sayilir. Gercek endpoint adresini kaynak
-koda, README'ye veya commit mesajina eklemeyin.
+`Local.xcconfig` ve `.env` Git tarafindan yok sayilir. Gercek endpoint, erisim
+anahtari veya IP degerlerini kaynak koda, README'ye ya da commit mesajina
+eklemeyin. Internet baglantinizin dis IP'si degisirse kurulum komutunu yeniden
+calistirip backend'i deploy edin.
 
 Backend degisiklikleri deploy edildikten sonra Xcode'da bir iOS Simulator
 secip projeyi Run edebilirsiniz.
@@ -242,7 +257,9 @@ Backend testleri su alanlari kapsar:
 - Update duplicate race condition'i
 - Routine priority siralamasi
 - Routine history filtrelemesi
-- Read-only Today summary hesaplamasi
+- Daily plan snapshot ve archive/edit sonrasi puan korumasi
+- Weekly routine gun secimi validation'i
+- Dev request authorizer ve dashboard finalized filtrelemesi
 - Dashboard ve insights response'lari
 
 Testleri calistirmak icin:
@@ -253,10 +270,10 @@ npm test
 
 ## Guvenlik Notu
 
-Proje su anda gelistirme ve demo odaklidir. Gercek kullaniciya acik bir surum
+Proje su anda gelistirme ve demo odaklidir. HTTP endpointleri yerel dev
+anahtari ve izin verilen dis IP ile korunur; API Gateway'de dusuk hiz siniri
+bulunur. Bu katman Cognito yerine gecmez. Gercek kullaniciya acik bir surum
 icin authentication ve kullanici bazli owner resolution tamamlanmalidir.
-Authentication tamamlanmadan API public production servisi olarak
-degerlendirilmemelidir.
 
 Repository'ye su dosyalar eklenmemelidir:
 
@@ -275,5 +292,5 @@ Repository'ye su dosyalar eklenmemelidir:
 
 ## Durum
 
-Backend otomatik testleri 24/24 basarilidir. Yeni backend endpointleri iOS
+Backend otomatik testleri 28/28 basarilidir. Yeni backend endpointleri iOS
 uygulamasindan once deploy edilmelidir.

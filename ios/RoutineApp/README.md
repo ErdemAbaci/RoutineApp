@@ -18,8 +18,14 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 ## Connect Backend
 
-The app reads its backend URL from Xcode config, not from Swift source.
-Create or update this local-only file:
+The app reads its backend URL and dev access token from local config, not from
+Swift source. From the repository root, generate the ignored access settings:
+
+```bash
+npm run setup:dev-access
+```
+
+Then create or update this local-only file's API URL:
 
 ```text
 ios/RoutineApp/Config/Local.xcconfig
@@ -31,7 +37,9 @@ Use this format:
 API_BASE_URL = https:/$()/YOUR_API_ID.execute-api.eu-central-1.amazonaws.com
 ```
 
-`Local.xcconfig` is ignored by git, so real dev URLs do not get committed.
+`Local.xcconfig` and the backend `.env` are ignored by git, so real dev URLs,
+tokens, and allowed IP values do not get committed. Run the setup command and
+deploy the backend again if your public IP changes.
 
 ## Current Screens
 

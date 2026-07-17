@@ -1,5 +1,6 @@
 import { getRoutineTemplateById } from "../services/routines/routineTemplateService";
 import { createMissingTemplateRoutines } from "../services/routines/routineCreationService";
+import { appendRoutineToTodayPlanIfOpen } from "../services/summaries/dailyPlanCoordinator";
 
 type ApiEvent = {
   pathParameters?: {
@@ -41,6 +42,9 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
       ownerId: "temporary-user-id",
       items: template.items,
     });
+    await Promise.all(
+      result.created.map((routine) => appendRoutineToTodayPlanIfOpen(routine)),
+    );
 
     return json(200, {
       templateId: template.id,

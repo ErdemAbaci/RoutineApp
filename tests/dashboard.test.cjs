@@ -24,6 +24,18 @@ test("dashboard aggregates weekly routine progress", async () => {
   ];
   summaryRepository.listByOwner = async () => [
     {
+      date: "2026-05-12",
+      badge: "missed",
+      totalPoints: 50,
+      earnedPoints: 0,
+      completedCount: 0,
+      skippedCount: 0,
+      missedCount: 0,
+      pointCompletionRate: 0,
+      completionRate: 0,
+      finalized: false,
+    },
+    {
       date: "2026-05-11",
       badge: "gold",
       totalPoints: 30,

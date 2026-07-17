@@ -3,8 +3,14 @@ import { completionRepository } from "../repositories/completionRepository";
 import { gamificationStateRepository } from "../repositories/gamificationStateRepository";
 import { getRoutinesActiveOnDate } from "../services/schedule/scheduleService";
 import { sortRoutinesByPriorityAndTime } from "../services/routines/routinePriorityService";
-import { toTodayRoutineResponse } from "../mappers/todayResponseMapper";
-import { calculateDailySummary } from "../services/summaries/summaryService";
+import {
+  toTodayRoutineResponse,
+  toTodayRoutineResponseFromSnapshot,
+} from "../mappers/todayResponseMapper";
+import {
+  calculateDailySummary,
+  ensureDailyPlan,
+} from "../services/summaries/summaryService";
 import { formatDateKey } from "../utils/date";
 
 type ApiResponse = {
@@ -43,26 +49,32 @@ export async function handler(): Promise<ApiResponse> {
       completions.map((completion) => [completion.routineId, completion]),
     );
 
+    await ensureDailyPlan({
+      ownerId,
+      date,
+      activeRoutines: activeTodayRoutines,
+      completions,
+    });
     const summary = await calculateDailySummary({
       ownerId,
       date,
       activeRoutines: activeTodayRoutines,
       completions,
     });
-    const routinesById = new Map(routines.map((routine) => [routine.id, routine]));
-    const itemRoutines = summary.finalized
-      ? completions
-          .map((completion) => routinesById.get(completion.routineId))
-          .filter((routine): routine is NonNullable<typeof routine> =>
-            routine !== undefined,
-          )
-      : activeTodayRoutines;
-    const items = itemRoutines.map((routine) =>
-      toTodayRoutineResponse(
-        routine,
-        completionsByRoutineId.get(routine.id),
-      ),
-    );
+    const items = summary.routineSnapshots
+      ? summary.routineSnapshots.map((snapshot) =>
+          toTodayRoutineResponseFromSnapshot(
+            snapshot,
+            completionsByRoutineId.get(snapshot.routineId),
+          ),
+        )
+      : getLegacyTodayItems({
+          routines,
+          activeTodayRoutines,
+          completions,
+          completionsByRoutineId,
+          finalized: summary.finalized,
+        });
     const gamificationState = await gamificationStateRepository.getByOwner(
       ownerId,
     );
@@ -111,4 +123,35 @@ export async function handler(): Promise<ApiResponse> {
 
     return json(500, { message: "Could not load today view" });
   }
+}
+
+function getLegacyTodayItems(params: {
+  routines: Awaited<ReturnType<typeof routineRepository.listByOwner>>;
+  activeTodayRoutines: Awaited<ReturnType<typeof routineRepository.listByOwner>>;
+  completions: Awaited<
+    ReturnType<typeof completionRepository.listByOwnerAndDate>
+  >;
+  completionsByRoutineId: Map<
+    string,
+    Awaited<ReturnType<typeof completionRepository.listByOwnerAndDate>>[number]
+  >;
+  finalized: boolean;
+}) {
+  const routinesById = new Map(
+    params.routines.map((routine) => [routine.id, routine]),
+  );
+  const itemRoutines = params.finalized
+    ? params.completions
+        .map((completion) => routinesById.get(completion.routineId))
+        .filter((routine): routine is NonNullable<typeof routine> =>
+          routine !== undefined,
+        )
+    : params.activeTodayRoutines;
+
+  return itemRoutines.map((routine) =>
+    toTodayRoutineResponse(
+      routine,
+      params.completionsByRoutineId.get(routine.id),
+    ),
+  );
 }

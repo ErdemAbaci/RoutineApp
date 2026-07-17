@@ -16,6 +16,9 @@ const {
 const {
   sortRoutinesByPriorityAndTime,
 } = require("../.build/services/routines/routinePriorityService.js");
+const {
+  appendRoutineToTodayPlanIfOpen,
+} = require("../.build/services/summaries/dailyPlanCoordinator.js");
 
 const baseRoutine = {
   ownerId: "temporary-user-id",
@@ -86,6 +89,9 @@ test("routine update maps a conditional duplicate conflict to 409", async () => 
   const originalGetById = routineRepository.getById;
   const originalListByOwner = routineRepository.listByOwner;
   const originalUpdateUnique = routineRepository.updateUnique;
+  const originalListByOwnerAndDate = completionRepository.listByOwnerAndDate;
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+  const originalSaveOpenPlan = summaryRepository.saveOpenPlanIfUnplanned;
 
   routineRepository.getById = async () => ({
     ...baseRoutine,
@@ -94,6 +100,9 @@ test("routine update maps a conditional duplicate conflict to 409", async () => 
     duplicateKey: "routine_duplicate#old",
   });
   routineRepository.listByOwner = async () => [];
+  completionRepository.listByOwnerAndDate = async () => [];
+  summaryRepository.getByOwnerAndDate = async () => null;
+  summaryRepository.saveOpenPlanIfUnplanned = async () => true;
   routineRepository.updateUnique = async () => {
     throw new Error("Routine already exists");
   };
@@ -116,6 +125,9 @@ test("routine update maps a conditional duplicate conflict to 409", async () => 
     routineRepository.getById = originalGetById;
     routineRepository.listByOwner = originalListByOwner;
     routineRepository.updateUnique = originalUpdateUnique;
+    completionRepository.listByOwnerAndDate = originalListByOwnerAndDate;
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+    summaryRepository.saveOpenPlanIfUnplanned = originalSaveOpenPlan;
   }
 });
 
@@ -186,5 +198,160 @@ test("today summary calculation does not write a non-finalized summary", async (
   } finally {
     summaryRepository.getByOwnerAndDate = originalGetSummary;
     summaryRepository.upsert = originalUpsert;
+  }
+});
+
+test("daily snapshot preserves points after the routine is archived or edited", async () => {
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+  const originalUpsert = summaryRepository.upsert;
+  const date = "2026-07-17";
+
+  summaryRepository.getByOwnerAndDate = async (_ownerId, requestedDate) =>
+    requestedDate === date
+      ? {
+          id: `temporary-user-id#${date}`,
+          ownerId: "temporary-user-id",
+          date,
+          routineSnapshots: [
+            {
+              routineId: "routine-1",
+              title: "Workout",
+              category: "workout",
+              frequencyType: "daily",
+              scheduledTime: "09:00",
+              priority: "normal",
+              reminderEnabled: false,
+              points: 25,
+            },
+          ],
+          finalized: false,
+          createdAt: "2026-07-17T00:00:00.000Z",
+          updatedAt: "2026-07-17T00:00:00.000Z",
+        }
+      : null;
+  summaryRepository.upsert = async () => {
+    throw new Error("Read-only calculation should not write");
+  };
+
+  try {
+    const summary = await calculateDailySummary({
+      ownerId: "temporary-user-id",
+      date,
+      activeRoutines: [],
+      completions: [
+        {
+          id: `routine-1#${date}`,
+          ownerId: "temporary-user-id",
+          routineId: "routine-1",
+          date,
+          status: "done",
+          createdAt: "2026-07-17T09:00:00.000Z",
+          updatedAt: "2026-07-17T09:00:00.000Z",
+        },
+      ],
+    });
+
+    assert.equal(summary.totalRoutines, 1);
+    assert.equal(summary.completedCount, 1);
+    assert.equal(summary.totalPoints, 25);
+    assert.equal(summary.earnedPoints, 25);
+    assert.equal(summary.badge, "gold");
+  } finally {
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+    summaryRepository.upsert = originalUpsert;
+  }
+});
+
+test("weekly routine validation requires exactly one selected day", () => {
+  const {
+    validateCreateRoutineBody,
+  } = require("../.build/services/routines/routineValidation.js");
+  const baseInput = {
+    title: "Weekly review",
+    category: "study",
+    frequencyType: "weekly",
+    scheduledTime: "19:00",
+    reminderEnabled: false,
+  };
+
+  assert.equal(validateCreateRoutineBody(baseInput).ok, false);
+  assert.equal(
+    validateCreateRoutineBody({ ...baseInput, daysOfWeek: [1, 3] }).ok,
+    false,
+  );
+  assert.equal(
+    validateCreateRoutineBody({ ...baseInput, daysOfWeek: [1] }).ok,
+    true,
+  );
+});
+
+test("a newly created weekly routine is appended only on its scheduled day", async () => {
+  const originalGetSummary = summaryRepository.getByOwnerAndDate;
+  const originalAppendSnapshot = summaryRepository.appendRoutineSnapshotIfOpen;
+  let appendCount = 0;
+
+  summaryRepository.getByOwnerAndDate = async () => ({
+    id: "temporary-user-id#2026-07-14",
+    ownerId: "temporary-user-id",
+    date: "2026-07-14",
+    routineSnapshots: [],
+    finalized: false,
+  });
+  summaryRepository.appendRoutineSnapshotIfOpen = async () => {
+    appendCount += 1;
+    return true;
+  };
+
+  try {
+    await appendRoutineToTodayPlanIfOpen(
+      {
+        ...baseRoutine,
+        id: "weekly-monday",
+        title: "Weekly review",
+        frequencyType: "weekly",
+        daysOfWeek: [1],
+        startDate: "2026-07-14",
+      },
+      new Date("2026-07-14T09:00:00.000Z"),
+    );
+
+    assert.equal(appendCount, 0);
+  } finally {
+    summaryRepository.getByOwnerAndDate = originalGetSummary;
+    summaryRepository.appendRoutineSnapshotIfOpen = originalAppendSnapshot;
+  }
+});
+
+test("dev request authorizer requires both token and allowed source IP", async () => {
+  const { handler } = require("../.build/handlers/authorizeDevRequest.js");
+  const originalToken = process.env.DEV_API_TOKEN;
+  const originalSourceIp = process.env.DEV_ALLOWED_SOURCE_IP;
+
+  process.env.DEV_API_TOKEN = "test-token";
+  process.env.DEV_ALLOWED_SOURCE_IP = "203.0.113.10";
+
+  try {
+    const allowed = await handler({
+      headers: { "x-routine-dev-key": "test-token" },
+      requestContext: { http: { sourceIp: "203.0.113.10" } },
+    });
+    const deniedToken = await handler({
+      headers: { "x-routine-dev-key": "wrong-token" },
+      requestContext: { http: { sourceIp: "203.0.113.10" } },
+    });
+    const deniedIp = await handler({
+      headers: { "x-routine-dev-key": "test-token" },
+      requestContext: { http: { sourceIp: "203.0.113.11" } },
+    });
+
+    assert.equal(allowed.isAuthorized, true);
+    assert.equal(deniedToken.isAuthorized, false);
+    assert.equal(deniedIp.isAuthorized, false);
+  } finally {
+    if (originalToken === undefined) delete process.env.DEV_API_TOKEN;
+    else process.env.DEV_API_TOKEN = originalToken;
+
+    if (originalSourceIp === undefined) delete process.env.DEV_ALLOWED_SOURCE_IP;
+    else process.env.DEV_ALLOWED_SOURCE_IP = originalSourceIp;
   }
 });

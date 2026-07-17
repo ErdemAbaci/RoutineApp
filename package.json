@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node --test tests/*.test.cjs",
+    "setup:dev-access": "node scripts/setup-dev-access.cjs",
     "deploy": "serverless deploy",
     "offline-info": "serverless info" 
   },

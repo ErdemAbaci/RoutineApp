@@ -3,6 +3,7 @@ import {
   createRoutineFromInput,
   DuplicateRoutineError,
 } from "../services/routines/routineCreationService";
+import { appendRoutineToTodayPlanIfOpen } from "../services/summaries/dailyPlanCoordinator";
 
 type ApiEvent = {
   body?: string | null;
@@ -48,6 +49,7 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
       ownerId: "temporary-user-id",
       input: validation.data,
     });
+    await appendRoutineToTodayPlanIfOpen(routine);
 
     return json(201, routine);
   } catch (error) {

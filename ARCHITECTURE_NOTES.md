@@ -57,12 +57,15 @@ Gunluk kullanim akisi soyle ilerler:
 2. iOS `GET /today` cagirir.
 3. Backend bugunun aktif rutinlerini bulur.
 4. Bugune ait completion kayitlarini okur.
-5. Gun henuz finalize edilmemisse summary hesaplanir ve guncellenir.
+5. Gun henuz planlanmamissa rutinlerin o gunku hali tek seferlik snapshot
+   olarak kaydedilir; summary bu sabit plan uzerinden hesaplanir.
 6. iOS ekranda rutinleri, puanlari, badge durumunu, streak/freeze bilgisini gosterir.
 7. Kullanici rutin saatinden sonra `complete`, veya istediginde `skip` aksiyonu alir.
-8. Backend completion kaydini yazar ve gunluk summary tekrar guncellenir.
+8. Backend completion kaydini yazar; guncel summary response sirasinda
+   snapshot ve completion kayitlarindan hesaplanir.
 
-Burada kritik nokta: `GET /today` sadece veri gostermekle kalmaz, finalize edilmemis gun icin summary'nin guncel kalmasina da yardim eder. Bu MVP icin pratik bir cozumdur.
+Burada kritik nokta: ilk `GET /today` gunun rutin ve puanlarini sabitler.
+Routine daha sonra duzenlense veya arsivlense de finalize sonucu degismez.
 
 ## Complete ve Skip Kurallari
 
@@ -209,7 +212,8 @@ iOS'ta son eklenen polish:
 
 - Auth yok. `temporary-user-id` ileride merkezi bir `resolveOwnerId(event)` helper'i ile degistirilmeli.
 - Push notification yok. Reminder alanlari var ama gercek mobil bildirim servisi henuz bagli degil.
-- `GET /today` summary hesaplamasina da dokunuyor. MVP icin iyi ama ileride salt read ve write etkisi ayrimi daha netlestirilebilir.
+- `GET /today` ilk gunluk plan icin tek bir DynamoDB write yapar. Kullanici
+  sayisi buyudugunde bu plan ayri bir planlama job'ina tasinabilir.
 - Update routine duplicate marker'i su an create kadar guclu degil. Kullanici bir rutini baska aktif rutinin imzasina update ederse ek guard gerekebilir.
 - Demo data temizligi manuel/script seviyesinde. Ileride admin/dev temizleme araci faydali olur.
 

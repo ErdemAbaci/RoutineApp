@@ -19,10 +19,6 @@ export async function markRoutineAsCompleted(
     throw new Error("Routine not found");
   }
 
-  if (routine.status !== "active") {
-    throw new Error("Routine is not active");
-  }
-
   const now = new Date();
   const date = formatDateKey(now);
 
@@ -32,11 +28,19 @@ export async function markRoutineAsCompleted(
     throw new Error("This day has already been finalized");
   }
 
-  if (!isRoutineActiveOnDate(routine, now)) {
+  const plannedRoutine = existingSummary?.routineSnapshots?.find(
+    (snapshot) => snapshot.routineId === routineId,
+  );
+
+  if (!plannedRoutine && routine.status !== "active") {
+    throw new Error("Routine is not active");
+  }
+
+  if (!plannedRoutine && !isRoutineActiveOnDate(routine, now)) {
     throw new Error("Routine is not scheduled for today");
   }
 
-  if (routine.scheduledTime > formatTimeKey(now)) {
+  if ((plannedRoutine?.scheduledTime ?? routine.scheduledTime) > formatTimeKey(now)) {
     throw new Error("Routine is not ready yet");
   }
 
@@ -70,10 +74,6 @@ export async function markRoutineAsSkipped(
     throw new Error("Routine not found");
   }
 
-  if (routine.status !== "active") {
-    throw new Error("Routine is not active");
-  }
-
   const now = new Date();
   const date = formatDateKey(now);
 
@@ -83,7 +83,15 @@ export async function markRoutineAsSkipped(
     throw new Error("This day has already been finalized");
   }
 
-  if (!isRoutineActiveOnDate(routine, now)) {
+  const plannedRoutine = existingSummary?.routineSnapshots?.find(
+    (snapshot) => snapshot.routineId === routineId,
+  );
+
+  if (!plannedRoutine && routine.status !== "active") {
+    throw new Error("Routine is not active");
+  }
+
+  if (!plannedRoutine && !isRoutineActiveOnDate(routine, now)) {
     throw new Error("Routine is not scheduled for today");
   }
 

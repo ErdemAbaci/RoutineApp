@@ -2,7 +2,6 @@ import { completionRepository } from "../../repositories/completionRepository";
 import { gamificationStateRepository } from "../../repositories/gamificationStateRepository";
 import { routineRepository } from "../../repositories/routineRepository";
 import { summaryRepository } from "../../repositories/summaryRepository";
-import { getRoutinePoints } from "../routines/routineScoring";
 import { getRoutinesActiveOnDate } from "../schedule/scheduleService";
 import { calculateBadge } from "./badgeService";
 import {
@@ -10,9 +9,13 @@ import {
   resolveFinalizedGamification,
 } from "./gamificationService";
 import { calculateNextStreak } from "./streakService";
+import { createDailyRoutineSnapshots } from "./dailyPlanService";
 import type { Routine } from "../../types/routine";
 import type { RoutineCompletion } from "../../types/completion";
-import type { DailySummary } from "../../types/dailySummary";
+import type {
+  DailyRoutineSnapshot,
+  DailySummary,
+} from "../../types/dailySummary";
 
 function getPreviousDateKey(date: string): string {
   const currentDate = new Date(`${date}T00:00:00.000Z`);
@@ -51,6 +54,8 @@ function hasSameSummaryValues(
     existingSummary.freezeBalanceAfterThisDay ===
       nextSummary.freezeBalanceAfterThisDay &&
     existingSummary.streakProtected === nextSummary.streakProtected &&
+    JSON.stringify(existingSummary.routineSnapshots ?? []) ===
+      JSON.stringify(nextSummary.routineSnapshots ?? []) &&
     existingSummary.finalized === nextSummary.finalized
   );
 }
@@ -60,6 +65,7 @@ async function buildAndSaveDailySummary(params: {
   date: string;
   activeRoutines: Routine[];
   completions: RoutineCompletion[];
+  routineSnapshots?: DailyRoutineSnapshot[];
   persist?: boolean;
   finalized?: boolean;
   gamification?: {
@@ -76,42 +82,54 @@ async function buildAndSaveDailySummary(params: {
     date,
     activeRoutines,
     completions,
+    routineSnapshots: requestedRoutineSnapshots,
     persist = true,
     finalized,
     gamification,
   } = params;
 
-  const totalRoutines = activeRoutines.length;
-  const activeRoutinesById = new Map(
-    activeRoutines.map((routine) => [routine.id, routine]),
+  const existingSummary = await summaryRepository.getByOwnerAndDate(
+    ownerId,
+    date,
   );
+  const routineSnapshots =
+    requestedRoutineSnapshots ??
+    existingSummary?.routineSnapshots ??
+    createDailyRoutineSnapshots(activeRoutines);
+  const snapshotsByRoutineId = new Map(
+    routineSnapshots.map((snapshot) => [snapshot.routineId, snapshot]),
+  );
+  const plannedCompletions = completions.filter((completion) =>
+    snapshotsByRoutineId.has(completion.routineId),
+  );
+  const totalRoutines = routineSnapshots.length;
 
-  const completedCount = completions.filter(
+  const completedCount = plannedCompletions.filter(
     (completion) => completion.status === "done",
   ).length;
 
-  const skippedCount = completions.filter(
+  const skippedCount = plannedCompletions.filter(
     (completion) => completion.status === "skipped",
   ).length;
 
-  const missedCount = completions.filter(
+  const missedCount = plannedCompletions.filter(
     (completion) => completion.status === "missed",
   ).length;
 
-  const totalPoints = activeRoutines.reduce(
-    (sum, routine) => sum + getRoutinePoints(routine),
+  const totalPoints = routineSnapshots.reduce(
+    (sum, snapshot) => sum + snapshot.points,
     0,
   );
 
-  const pointsByStatus = completions.reduce(
+  const pointsByStatus = plannedCompletions.reduce(
     (points, completion) => {
-      const routine = activeRoutinesById.get(completion.routineId);
+      const snapshot = snapshotsByRoutineId.get(completion.routineId);
 
-      if (!routine) {
+      if (!snapshot) {
         return points;
       }
 
-      const routinePoints = getRoutinePoints(routine);
+      const routinePoints = snapshot.points;
 
       if (completion.status === "done") {
         points.earnedPoints += routinePoints;
@@ -157,11 +175,6 @@ async function buildAndSaveDailySummary(params: {
 
   const now = new Date().toISOString();
 
-  const existingSummary = await summaryRepository.getByOwnerAndDate(
-    ownerId,
-    date,
-  );
-
   const shouldFinalize = finalized === true || existingSummary?.finalized === true;
 
   const summary: DailySummary = {
@@ -199,6 +212,7 @@ async function buildAndSaveDailySummary(params: {
       gamification?.streakProtected ??
       existingSummary?.streakProtected ??
       false,
+    routineSnapshots,
     finalized: shouldFinalize,
     createdAt: existingSummary?.createdAt ?? now,
     updatedAt: now,
@@ -215,6 +229,39 @@ async function buildAndSaveDailySummary(params: {
   await summaryRepository.upsert(summary);
 
   return summary;
+}
+
+export async function ensureDailyPlan(params: {
+  ownerId: string;
+  date: string;
+  activeRoutines: Routine[];
+  completions: RoutineCompletion[];
+}): Promise<DailySummary> {
+  const existingSummary = await summaryRepository.getByOwnerAndDate(
+    params.ownerId,
+    params.date,
+  );
+
+  if (existingSummary?.finalized || existingSummary?.routineSnapshots) {
+    return existingSummary;
+  }
+
+  const preview = await buildAndSaveDailySummary({
+    ...params,
+    routineSnapshots: createDailyRoutineSnapshots(params.activeRoutines),
+    persist: false,
+    finalized: false,
+  });
+  const saved = await summaryRepository.saveOpenPlanIfUnplanned(preview);
+
+  if (saved) {
+    return preview;
+  }
+
+  return (
+    (await summaryRepository.getByOwnerAndDate(params.ownerId, params.date)) ??
+    preview
+  );
 }
 
 export async function calculateAndSaveDailySummary(params: {
@@ -279,6 +326,9 @@ export async function finalizeDailySummary(params: {
 
   const routines = await routineRepository.listByOwner(ownerId);
   const activeRoutines = getRoutinesActiveOnDate(routines, dateObject);
+  const routineSnapshots =
+    existingSummary?.routineSnapshots ??
+    createDailyRoutineSnapshots(activeRoutines);
 
   const existingCompletions = await completionRepository.listByOwnerAndDate(
     ownerId,
@@ -294,12 +344,12 @@ export async function finalizeDailySummary(params: {
 
   const now = new Date().toISOString();
 
-  const missedCompletions: RoutineCompletion[] = activeRoutines
-    .filter((routine) => !completionsByRoutineId.has(routine.id))
-    .map((routine) => ({
-      id: `${routine.id}#${date}`,
+  const missedCompletions: RoutineCompletion[] = routineSnapshots
+    .filter((snapshot) => !completionsByRoutineId.has(snapshot.routineId))
+    .map((snapshot) => ({
+      id: `${snapshot.routineId}#${date}`,
       ownerId,
-      routineId: routine.id,
+      routineId: snapshot.routineId,
       date,
       status: "missed",
       createdAt: now,
@@ -321,6 +371,7 @@ export async function finalizeDailySummary(params: {
     date,
     activeRoutines,
     completions: allCompletions,
+    routineSnapshots,
     persist: false,
     finalized: false,
   });
@@ -351,6 +402,7 @@ export async function finalizeDailySummary(params: {
     date,
     activeRoutines,
     completions: allCompletions,
+    routineSnapshots,
     finalized: true,
     gamification,
   });

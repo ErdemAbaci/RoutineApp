@@ -6,6 +6,7 @@ import {
   getRoutineSignature,
 } from "../services/routines/routineCreationService";
 import type { Routine } from "../types/routine";
+import { ensureTodayPlanForOwner } from "../services/summaries/dailyPlanCoordinator";
 
 type ApiEvent = {
   body?: string | null;
@@ -75,6 +76,11 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
     if (hasOtherActiveDuplicate) {
       throw new DuplicateRoutineError();
     }
+
+    await ensureTodayPlanForOwner({
+      ownerId: existingRoutine.ownerId,
+      routines,
+    });
 
     const updatedRoutine: Routine = {
       ...existingRoutine,

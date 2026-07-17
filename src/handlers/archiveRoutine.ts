@@ -1,4 +1,5 @@
 import { routineRepository } from "../repositories/routineRepository";
+import { ensureTodayPlanForOwner } from "../services/summaries/dailyPlanCoordinator";
 
 type ApiEvent = {
   pathParameters?: {
@@ -42,6 +43,9 @@ export async function handler(event: ApiEvent): Promise<ApiResponse> {
 
     const updatedAt = new Date().toISOString();
 
+    await ensureTodayPlanForOwner({
+      ownerId: existingRoutine.ownerId,
+    });
     await routineRepository.archiveAndReleaseDuplicateKey(existingRoutine, updatedAt);
 
     return json(200, {

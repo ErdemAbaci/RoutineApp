@@ -4,8 +4,12 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import type { DailySummary } from "../types/dailySummary";
+import type {
+  DailyRoutineSnapshot,
+  DailySummary,
+} from "../types/dailySummary";
 
 const dynamoDbClient = new DynamoDBClient({});
 const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
@@ -28,6 +32,77 @@ export const summaryRepository = {
         Item: summary,
       }),
     );
+  },
+
+  async saveOpenPlanIfUnplanned(summary: DailySummary): Promise<boolean> {
+    try {
+      await dynamoDb.send(
+        new PutCommand({
+          TableName: getTableName(),
+          Item: summary,
+          ConditionExpression:
+            "attribute_not_exists(id) OR (#finalized = :notFinalized AND attribute_not_exists(routineSnapshots))",
+          ExpressionAttributeNames: {
+            "#finalized": "finalized",
+          },
+          ExpressionAttributeValues: {
+            ":notFinalized": false,
+          },
+        }),
+      );
+
+      return true;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "ConditionalCheckFailedException"
+      ) {
+        return false;
+      }
+
+      throw error;
+    }
+  },
+
+  async appendRoutineSnapshotIfOpen(
+    ownerId: string,
+    date: string,
+    snapshot: DailyRoutineSnapshot,
+    updatedAt: string,
+  ): Promise<boolean> {
+    try {
+      await dynamoDb.send(
+        new UpdateCommand({
+          TableName: getTableName(),
+          Key: {
+            id: `${ownerId}#${date}`,
+          },
+          UpdateExpression:
+            "SET routineSnapshots = list_append(routineSnapshots, :snapshot), updatedAt = :updatedAt",
+          ConditionExpression:
+            "attribute_exists(id) AND #finalized = :notFinalized AND attribute_exists(routineSnapshots)",
+          ExpressionAttributeNames: {
+            "#finalized": "finalized",
+          },
+          ExpressionAttributeValues: {
+            ":snapshot": [snapshot],
+            ":updatedAt": updatedAt,
+            ":notFinalized": false,
+          },
+        }),
+      );
+
+      return true;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "ConditionalCheckFailedException"
+      ) {
+        return false;
+      }
+
+      throw error;
+    }
   },
 
   async getByOwnerAndDate(
@@ -82,4 +157,3 @@ export const summaryRepository = {
     return items?.[0] ?? null;
   },  
 };
-

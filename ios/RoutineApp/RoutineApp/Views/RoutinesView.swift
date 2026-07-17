@@ -295,7 +295,13 @@ private struct RoutineEditorView: View {
                         }
                     }
 
-                    if draft.frequencyType == .selectedDays {
+                    if draft.frequencyType == .weekly {
+                        Picker("Gün", selection: weeklyDayBinding) {
+                            ForEach(weekDays, id: \.0) { day in
+                                Text(day.1).tag(day.0)
+                            }
+                        }
+                    } else if draft.frequencyType == .selectedDays {
                         ForEach(weekDays, id: \.0) { day in
                             Toggle(day.1, isOn: dayBinding(day.0))
                         }
@@ -334,13 +340,22 @@ private struct RoutineEditorView: View {
                 }
             }
             .onChange(of: draft.frequencyType) { _, newValue in
-                if newValue != .selectedDays {
+                if newValue == .daily {
                     draft.daysOfWeek = nil
+                } else if newValue == .weekly {
+                    draft.daysOfWeek = [draft.daysOfWeek?.first ?? 1]
                 } else if draft.daysOfWeek == nil {
                     draft.daysOfWeek = [1]
                 }
             }
         }
+    }
+
+    private var weeklyDayBinding: Binding<Int> {
+        Binding(
+            get: { draft.daysOfWeek?.first ?? 1 },
+            set: { draft.daysOfWeek = [$0] }
+        )
     }
 
     private func dayBinding(_ day: Int) -> Binding<Bool> {

@@ -88,10 +88,22 @@ export function validateCreateRoutineBody(body: unknown): ValidationResult {
   }
 
   if (
-    payload.frequencyType === "selected_days" &&
+    (payload.frequencyType === "weekly" ||
+      payload.frequencyType === "selected_days") &&
     (!Array.isArray(payload.daysOfWeek) || payload.daysOfWeek.length === 0)
   ) {
-    return { ok: false, message: "daysOfWeek is required for selected_days" };
+    return {
+      ok: false,
+      message: "daysOfWeek is required for weekly and selected_days",
+    };
+  }
+
+  if (
+    payload.frequencyType === "weekly" &&
+    Array.isArray(payload.daysOfWeek) &&
+    payload.daysOfWeek.length !== 1
+  ) {
+    return { ok: false, message: "weekly routines require exactly one day" };
   }
 
   if (payload.daysOfWeek !== undefined) {
